@@ -1,0 +1,15 @@
+HKCR
+{
+  NoRemove CLSID
+  {
+    ForceRemove {5DB729FE-8FB5-4553-AFC9-935D441AC52F} = s 'ViewCallback Class'
+    {
+      ForceRemove InprocServer32 = s '%MODULE%'
+      {
+        ForceRemove val ThreadingModel = s 'Apartment'
+      }
+      ForceRemove TypeLib = s '{41084752-03AC-47B2-9B62-CE811822B30A}'
+      ForceRemove Version = s '1.0'
+    }
+  }
+}

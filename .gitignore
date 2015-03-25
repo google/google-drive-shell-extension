@@ -1,0 +1,10 @@
+*.cache
+*.vspscc
+*.sdf
+*.opensdf
+*.user
+*.suo
+*.force
+bin
+obj
+ipch

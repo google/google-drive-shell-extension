@@ -1,0 +1,144 @@
+/*
+Copyright 2014 Google Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+// FusionGDShell.idl : IDL source for FusionGDShell
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (FusionGDShell.tlb) and marshalling code.
+
+
+#include "guids.h"
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(GUID_IGDriveShlExt),
+	pointer_default(unique)
+]
+interface IGDriveShlExt : IUnknown{
+	//[] HRESULT InitializeFusionDriveManager([in] VARIANT* pDriveMgr);
+};
+
+
+[
+	object,
+	uuid(GUID_IGDriveEnumerator),
+	pointer_default(unique)
+]
+interface IGDriveEnumerator : IUnknown{
+	[] HRESULT Initialize([in] VARIANT* pFusionDriveManager, [in] VARIANT* pidl, [in] ULONG grfFlags);
+};
+
+
+[
+	object,
+	uuid(GUID_IViewCallback),
+	pointer_default(unique)
+]
+interface IViewCallback : IUnknown{
+	[] HRESULT Initialize([in] VARIANT* pDriveMgr);
+};
+
+
+[
+	object,
+	uuid(GUID_IDriveItemStream),
+	pointer_default(unique)
+]
+interface IDriveItemStream : IUnknown{
+};
+
+
+[
+	object,
+	uuid(GUID_IDriveItemDataObject),
+	pointer_default(unique)
+]
+	interface IDriveItemDataObject : IUnknown{
+	};
+
+[
+	object,
+	uuid(GUID_IDriveItemRelatedItem),
+	pointer_default(unique)
+]
+interface IDriveItemRelatedItem: IUnknown{
+};
+
+
+[
+	uuid(GUID_TypeLib),
+	version(1.0),
+]
+library FusionGDShellLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(GUID_GDriveShlExt)
+	]
+	coclass GDriveShlExt
+	{
+		[default] interface IGDriveShlExt;
+	};
+
+
+	[
+		uuid(GUID_GDriveEnumerator)
+	]
+	coclass GDriveEnumerator
+	{
+		[default] interface IGDriveEnumerator;
+	};
+
+
+	[
+		uuid(GUID_ViewCallback)
+	]
+	coclass ViewCallback
+	{
+		[default] interface IViewCallback;
+	};
+
+
+	[
+		uuid(GUID_DriveItemStream)
+	]
+	coclass DriveItemStream
+	{
+		[default] interface IDriveItemStream;
+	};
+
+
+	[
+		uuid(GUID_DriveItemDataObject)
+	]
+	coclass DriveItemDataObject
+	{
+		[default] interface IDriveItemDataObject;
+	};
+
+
+	[
+		uuid(GUID_DriveItemRelatedItem)
+	]
+	coclass DriveItemRelatedItem
+	{
+		[default] interface IDriveItemRelatedItem;
+	};
+};
+

@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{07ff4ec0-fb62-4dd5-8415-56dd89a178b0}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Common Shell Files">
+      <UniqueIdentifier>{f8c73a48-d0e1-409a-b0e7-0cab5efa1847}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common Shell Files\Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Common Shell Files\Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Drive Shell Files">
+      <UniqueIdentifier>{661a7cbf-ac70-411c-86d0-142b0b014527}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drive Shell Files\Header Files">
+      <UniqueIdentifier>{0d9f2b48-e962-4253-aedb-89d3dd0858d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drive Shell Files\Source Files">
+      <UniqueIdentifier>{a3f283da-6d72-4e29-9040-943c4b58b32a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drive API Files">
+      <UniqueIdentifier>{a1d0e306-577e-4cba-a01c-e6fd172497b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drive API Files\Header Files">
+      <UniqueIdentifier>{ba7cf7a1-8a0c-4e39-84ef-b91a212da8ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drive API Files\Source Files">
+      <UniqueIdentifier>{96f089f1-0aa6-4ef0-a2dd-45cd7a6706c4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FusionGDShell.cpp">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FusionGDShell_i.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XmlReader.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorInfo.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileInfo.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileManager.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MethodInfo.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Service.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriveItem.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GDriveShlExt.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriveItemPropertyStoreFactory.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriveItemPropertyStore.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriveItemDataObject.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriveItemStream.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceMutex.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriveItemRelatedItem.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PropertyHelper.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LogInfo.cpp">
+      <Filter>Drive API Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UserIdentity.cpp">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisposableHandle.cpp">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PathInfo.cpp">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ContextMenuCBHandler.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellFolderViewCBHandler.cpp">
+      <Filter>Drive Shell Files\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dllmain.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FusionGDShell_i.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorInfo.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileInfo.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileManager.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MethodInfo.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Service.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XmlReader.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MethodType.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ChildItemIDPolicy.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItem.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItemSignature.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GDriveShlExt.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItemPropertyStoreFactory.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItemPropertyStore.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="guids.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItemDataObject.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItemStream.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItemPropertyHandler.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scoped_Mutex.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveItemRelatedItem.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertyHelper.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogInfo.h">
+      <Filter>Drive API Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UserIdentity.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DisposableHandle.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PathInfo.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ContextMenuCBHandler.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellFolderViewCBHandler.h">
+      <Filter>Drive Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IdList.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PropVariant.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FusionGDShell.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="FusionGDShellVersion.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="FusionGDShell.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="FusionGDShell.def">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </None>
+    <None Include="GDriveShlExt.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="GDriveEnumerator.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ViewCallback.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="FusionGDShell.idl">
+      <Filter>Common Shell Files\Source Files</Filter>
+    </Midl>
+  </ItemGroup>
+</Project>

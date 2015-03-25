@@ -1,0 +1,162 @@
+HKCR
+{
+  NoRemove CLSID
+  {
+    ForceRemove {30323693-0E1E-4365-99FB-5074A5C6F273} = s 'DriveFusion'
+    {
+      ForceRemove InprocServer32 = s '%MODULE%'
+      {
+        ForceRemove val ThreadingModel = s 'Apartment'
+      }
+      ForceRemove val InfoTip = s 'DriveFusion'
+      ForceRemove DefaultIcon = s '%PROGRAM_FILESX86%\Google\Drive Proxy Service\Images\Folder.ico,0'
+      ForceRemove ShellFolder
+      {
+        ForceRemove val Attributes = d '&HF8804108'
+        ForceRemove val WantsFORPARSING = s ''
+      }
+    }
+  }
+}
+
+HKLM
+{
+  NoRemove Software
+  {
+    NoRemove Classes
+    {
+      NoRemove Applications
+      {
+        ForceRemove 'Drive Proxy Service'
+        {
+          ForceRemove shell
+          {
+            ForceRemove open
+            {
+              command = s '"%PROGRAM_FILESX86%\Google\Drive Proxy Service\DriveProxy.Service.exe" %COMMAND_OPEN%'
+              {
+              }
+            }
+          }
+        }
+        ForceRemove 'DriveProxy' = s 'Drive Proxy Service'
+        {
+          ForceRemove DefaultIcon = s '%PROGRAM_FILESX86%\Google\Drive Proxy Service\Images\googledrive.ico,0'
+          {
+          }
+          ForceRemove shell
+          {
+            ForceRemove open
+            {
+              command = s '"%PROGRAM_FILESX86%\Google\Drive Proxy Service\DriveProxy.Service.exe" %COMMAND_OPEN%'
+              {
+              }
+            }
+          }
+        }
+        ForceRemove 'DriveProxy.Service.exe' = s 'Drive Proxy Service'
+        {
+          ForceRemove DefaultIcon = s '%PROGRAM_FILESX86%\Google\Drive Proxy Service\Images\googledrive.ico,0'
+          {
+          }
+          ForceRemove shell
+          {
+            ForceRemove open
+            {
+              command = s '"%PROGRAM_FILESX86%\Google\Drive Proxy Service\DriveProxy.Service.exe" %COMMAND_OPEN%'
+              {
+              }
+            }
+          }
+        }
+      }
+      ForceRemove 'DriveProxy' = s 'Drive Proxy Service'
+      {
+        ForceRemove DefaultIcon = s '%PROGRAM_FILESX86%\Google\Drive Proxy Service\Images\googledrive.ico,0'
+        {
+        }
+        ForceRemove shell
+        {
+          ForceRemove open
+          {
+            command = s '"%PROGRAM_FILESX86%\Google\Drive Proxy Service\DriveProxy.Service.exe" %COMMAND_OPEN%'
+            {
+            }
+          }
+        }
+      }
+      ForceRemove 'DriveProxy.Service.exe' = s 'Drive Proxy Service'
+      {
+        ForceRemove DefaultIcon = s '%PROGRAM_FILESX86%\Google\Drive Proxy Service\Images\googledrive.ico,0'
+        {
+        }
+        ForceRemove shell
+        {
+          ForceRemove open
+          {
+            command = s '"%PROGRAM_FILESX86%\Google\Drive Proxy Service\DriveProxy.Service.exe" %COMMAND_OPEN%'
+            {
+            }
+          }
+        }
+      }
+      ForceRemove 'DriveProxyDoc' = s 'google-apps'
+      {
+        ForceRemove DefaultIcon = s '%PROGRAM_FILESX86%\Google\Drive Proxy Service\Images\googledrive.ico,0'
+        {
+        }
+        ForceRemove shell
+        {
+          ForceRemove open
+          {
+            command = s '"%PROGRAM_FILESX86%\Google\Drive Proxy Service\DriveProxy.Service.exe" %COMMAND_OPEN%'
+            {
+            }
+          }
+        }
+      }
+    }
+    NoRemove Microsoft
+    {
+      NoRemove Windows
+      {
+        NoRemove CurrentVersion
+        {
+          NoRemove Explorer
+          {
+            NoRemove MyComputer
+            {
+              NoRemove NameSpace
+              {
+                ForceRemove {30323693-0E1E-4365-99FB-5074A5C6F273} = s 'Drive Proxy Service'
+              }
+            }
+          }
+          NoRemove 'Shell Extensions'
+          {
+            NoRemove Approved
+            {
+              ForceRemove val {30323693-0E1E-4365-99FB-5074A5C6F273} = s 'Drive Proxy Service'
+            }
+          }
+        }
+      }
+    }
+  }
+  NoRemove System
+  {
+    NoRemove CurrentControlSet
+    {
+      NoRemove Control
+      {
+        NoRemove 'Session Manager'
+        {
+          NoRemove Environment
+          {
+            ForceRemove val DriveProxy.Service.exe = s '%PROGRAM_FILESX86%\Google\Drive Proxy Service\DriveProxy.Service.exe'
+          }
+        }
+      }
+    }
+  }
+}

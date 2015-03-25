@@ -1,0 +1,150 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {30323693-0E1E-4365-99FB-5074A5C6F273} = s 'Google Drive'
+		{
+			ForceRemove InprocServer32 = s '%MODULE%'
+			{
+				ForceRemove val ThreadingModel = s 'Apartment'
+			}
+			ForceRemove val InfoTip = s 'Google Drive Shell'
+			ForceRemove DefaultIcon = s 'C:\\Program Files (x86)\\Google\\Google Drive\\Images\\googledrive.ico,0'
+			ForceRemove ShellFolder
+			{
+				ForceRemove val Attributes = d '&HA8804008'
+			}
+		}
+	}
+}
+
+HKLM
+{
+	NoRemove Software
+	{
+		NoRemove Classes
+		{
+			NoRemove Applications
+			{
+				ForceRemove 'Google Drive'
+				{
+					ForceRemove shell
+					{
+						ForceRemove open
+						{
+							ForceRemove command = s '\"C:\\Program Files (x86)\\Google\\Google Drive\\GoogleDrive.exe\" %1'
+							{
+							}
+						}
+					}
+				}
+				ForceRemove 'GoogleDrive' = s 'Google Drive'
+				{
+					ForceRemove DefaultIcon = s 'C:\\Program Files (x86)\\Google\\Google Drive\\Images\\googledrive.ico,0'
+					{
+					}
+					ForceRemove shell
+					{
+						ForceRemove open
+						{
+							ForceRemove command = s '\"C:\\Program Files (x86)\\Google\\Google Drive\\GoogleDrive.exe\" %1'
+							{
+							}
+						}
+					}
+				}
+				ForceRemove 'GoogleDrive.exe' = s 'Google Drive'
+				{
+					ForceRemove DefaultIcon = s 'C:\\Program Files (x86)\\Google\\Google Drive\\Images\\googledrive.ico,0'
+					{
+					}
+					ForceRemove shell
+					{
+						ForceRemove open
+						{
+							ForceRemove command = s '\"C:\\Program Files (x86)\\Google\\Google Drive\\GoogleDrive.exe\" %1'
+							{
+							}
+						}
+					}
+				}
+			}
+			ForceRemove 'GoogleDrive' = s 'Google Drive'
+			{
+				ForceRemove DefaultIcon = s 'C:\\Program Files (x86)\\Google\\Google Drive\\Images\\googledrive.ico,0'
+				{
+				}
+				ForceRemove shell
+				{
+					ForceRemove open
+					{
+						ForceRemove command = s '\"C:\\Program Files (x86)\\Google\\Google Drive\\GoogleDrive.exe\" %1'
+						{
+						}
+					}
+				}
+			}
+			ForceRemove 'GoogleDriveDoc' = s 'google-apps'
+			{
+				ForceRemove DefaultIcon = s 'C:\\Program Files (x86)\\Google\\Google Drive\\Images\\googledrive.ico,0'
+				{
+				}
+				ForceRemove shell
+				{
+					ForceRemove open
+					{
+						ForceRemove command = s '\"C:\\Program Files (x86)\\Google\\Google Drive\\GoogleDrive.exe\" %1'
+						{
+						}
+					}
+				}
+			}
+		}
+		NoRemove Microsoft
+		{
+			NoRemove Windows
+			{
+				NoRemove CurrentVersion
+				{
+					NoRemove Explorer
+					{
+						NoRemove MyComputer
+						{
+							NoRemove NameSpace
+							{
+								ForceRemove {30323693-0E1E-4365-99FB-5074A5C6F273} = s 'Google Drive'
+							}
+						}
+					}
+					NoRemove 'Shell Extensions'
+					{
+						NoRemove Approved
+						{
+							ForceRemove val {30323693-0E1E-4365-99FB-5074A5C6F273} = s 'Google Drive'
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+HKLM
+{
+	NoRemove System
+	{
+		NoRemove CurrentControlSet
+		{
+			NoRemove Control
+			{
+				NoRemove 'Session Manager'
+				{
+					NoRemove Environment
+					{
+						ForceRemove val GoogleDrive.Client.exe = s 'C:\\Program Files (x86)\\Google\\Google Drive\\GoogleDrive.Client.exe'
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,15 @@
+HKCR
+{
+  NoRemove CLSID
+  {
+    ForceRemove {623F912B-10E0-4E94-8CAF-925AC8A3ECC5} = s 'GDriveEnumerator Class'
+    {
+      ForceRemove InprocServer32 = s '%MODULE%'
+      {
+        ForceRemove val ThreadingModel = s 'Apartment'
+      }
+      ForceRemove TypeLib = s '{41084752-03AC-47B2-9B62-CE811822B30A}'
+      ForceRemove Version = s '1.0'
+    }
+  }
+}

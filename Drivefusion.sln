@@ -1,0 +1,72 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DriveFusion", "DriveFusion\FusionGDShell.vcxproj", "{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B0059B-9180-4590-8386-19AF9EE69C27} = {89B0059B-9180-4590-8386-19AF9EE69C27}
+	EndProjectSection
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "DriveFusion.Installer", "DriveFusion.Installer\DriveFusion.Installer.wixproj", "{CA4DB0CA-BC95-47C5-9829-4E5811D52523}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89B0059B-9180-4590-8386-19AF9EE69C27} = {89B0059B-9180-4590-8386-19AF9EE69C27}
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB} = {3003D2A6-AE40-4806-A84B-DF6D240A2ABB}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectConfigGenerator", "ProjectConfigGenerator\ProjectConfigGenerator.csproj", "{89B0059B-9180-4590-8386-19AF9EE69C27}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{77F65187-52C0-4A41-90AE-A79B7CE354C8}"
+	ProjectSection(SolutionItems) = preProject
+		ProjectConfig.txt = ProjectConfig.txt
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Debug|x64.ActiveCfg = Debug|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Debug|x64.Build.0 = Debug|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Debug|x86.ActiveCfg = Debug|Win32
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Debug|x86.Build.0 = Debug|Win32
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Release|Mixed Platforms.Build.0 = Release|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Release|x64.ActiveCfg = Release|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Release|x64.Build.0 = Release|x64
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Release|x86.ActiveCfg = Release|Win32
+		{3003D2A6-AE40-4806-A84B-DF6D240A2ABB}.Release|x86.Build.0 = Release|Win32
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Debug|x64.ActiveCfg = Debug|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Debug|x64.Build.0 = Debug|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Debug|x86.ActiveCfg = Debug|x86
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Debug|x86.Build.0 = Debug|x86
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Release|Mixed Platforms.Build.0 = Release|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Release|x64.ActiveCfg = Release|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Release|x64.Build.0 = Release|x64
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Release|x86.ActiveCfg = Release|x86
+		{CA4DB0CA-BC95-47C5-9829-4E5811D52523}.Release|x86.Build.0 = Release|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Debug|x64.ActiveCfg = Debug|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Debug|x64.Build.0 = Debug|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Debug|x86.ActiveCfg = Debug|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Debug|x86.Build.0 = Debug|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Release|Mixed Platforms.Build.0 = Release|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Release|x64.ActiveCfg = Release|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Release|x64.Build.0 = Release|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Release|x86.ActiveCfg = Release|x86
+		{89B0059B-9180-4590-8386-19AF9EE69C27}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

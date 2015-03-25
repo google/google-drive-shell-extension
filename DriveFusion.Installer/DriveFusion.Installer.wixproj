@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.8</ProductVersion>
+    <ProjectGuid>{ca4db0ca-bc95-47c5-9829-4e5811d52523}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>DriveFusion</OutputName>
+    <OutputType>Package</OutputType>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <Name>DriveFusion.Installer</Name>
+    <IncludeSearchPaths>..\obj\gen\</IncludeSearchPaths>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>..\bin\$(Configuration)\$(Platform)\Installer\</OutputPath>
+    <IntermediateOutputPath>..\obj\$(Configuration)\$(Platform)\Installer\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+    <SuppressAllWarnings>False</SuppressAllWarnings>
+    <Pedantic>True</Pedantic>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>..\bin\$(Configuration)\$(Platform)\Installer\</OutputPath>
+    <IntermediateOutputPath>..\obj\$(Configuration)\$(Platform)\Installer\</IntermediateOutputPath>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <SuppressAllWarnings>False</SuppressAllWarnings>
+    <Pedantic>True</Pedantic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DefineConstants>Debug</DefineConstants>
+    <SuppressAllWarnings>False</SuppressAllWarnings>
+    <Pedantic>True</Pedantic>
+    <OutputPath>..\bin\$(Configuration)\$(Platform)\Installer\</OutputPath>
+    <IntermediateOutputPath>..\obj\$(Configuration)\$(Platform)\Installer\</IntermediateOutputPath>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>..\bin\$(Configuration)\$(Platform)\Installer\</OutputPath>
+    <IntermediateOutputPath>..\obj\$(Configuration)\$(Platform)\Installer\</IntermediateOutputPath>
+    <SuppressAllWarnings>False</SuppressAllWarnings>
+    <Pedantic>True</Pedantic>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <UsingTask TaskName="WixPropertyBuilder" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <ConfigFile ParameterType="System.String" Required="true" />
+      <OutputIncludeFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Diagnostics" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        //var outputFolderInfo = new DirectoryInfo(Path.GetDirectoryName(this.OutputIncludeFile));
+        Directory.CreateDirectory(Path.GetDirectoryName(this.OutputIncludeFile));
+        StreamWriter propIncludeWriter = new StreamWriter(this.OutputIncludeFile, false);
+        propIncludeWriter.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        propIncludeWriter.WriteLine("<Include Id=\"ProjectProperties\">");
+
+        StreamReader configReader = new StreamReader(this.ConfigFile);
+        string line;
+        while ((line = configReader.ReadLine()) != null)
+        {
+          var splittedLine = line.Split(" ".ToCharArray(), 2);
+          var key = splittedLine[0];
+          var value = splittedLine[1];
+          string newLine = "<?define " + key + "=\"" + value + "\" ?>";
+          propIncludeWriter.WriteLine(newLine);
+        }
+        propIncludeWriter.WriteLine("</Include>");
+        propIncludeWriter.Close();
+        configReader.Close();
+        ]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="BeforeBuild">
+    <WixPropertyBuilder ConfigFile="$(ProjectDir)..\ProjectConfig.txt" OutputIncludeFile="..\obj\gen\DriveFusionProperties.wxi">
+    </WixPropertyBuilder>
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>

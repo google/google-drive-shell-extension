@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2014 Google Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include DriveFusionProperties.wxi ?>
+  <?define ProductName = "$(var.Product)"?>
+  <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Company)" UpgradeCode="6D2F2994-AB38-4A5E-B766-D5AFC7D8FD31">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed." />
+    <Media Id="1" Cabinet="DriveFusion.cab" EmbedCab="yes" />
+
+    <Feature Id="ShellExtension" Title="$(var.ProductName)" Level="1">
+      <ComponentGroupRef Id="ShellExtensionComponents"/>
+      <ComponentGroupRef Id="ShellExtensionImages"/>
+      <ComponentRef Id="ApplicationConfig"/>
+      <ComponentRef Id="ApplicationShortcut"/>
+    </Feature>
+
+    <?define FusionSourceDir = "$(var.SolutionDir)DriveFusion\"?>
+    <Icon Id="FusionIcon" SourceFile="$(var.FusionSourceDir)Images\Folder.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="FusionIcon" />
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+    <Property Id="ARPNOMODIFY" Value="yes" Secure="yes" />
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <?define ProgramFilesId = "ProgramFilesFolder"?>
+      <?if "$(var.Platform)" = "x64"?>
+        <?undef ProgramFilesId ?>
+        <?define ProgramFilesId = "ProgramFiles64Folder"?>
+      <?endif?>
+      <Directory Id="$(var.ProgramFilesId)">
+        <Directory Id="Google" Name="Google">
+          <Directory Id="INSTALLFOLDER" Name="$(var.ProductName)">
+            <Directory Id="IMAGESFOLDER" Name="Images"/>
+          </Directory>
+          <Directory Id="ProgramMenuFolder">
+            <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)"/>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ShellExtensionComponents" Directory="INSTALLFOLDER">
+      <Component Id="DriveFusion.dll" Guid="3C8A3A70-713F-4850-9EA9-D8D8C0E79BAB">
+        <?define FusionBuildDir = "$(var.SolutionDir)bin\$(var.Configuration)\$(var.Platform)\DriveFusion\"?>
+        <File Id="DriveFusion.dll" Source="$(var.FusionBuildDir)DriveFusion.dll" KeyPath="yes" Checksum="yes"/>
+      </Component>
+
+      <Component Id="RegistryEntries" Guid="E37B7C53-5DA3-4827-B114-3E8FD9B4E9EA" KeyPath="yes">
+        <RegistryKey Root="HKCR" Key="CLSID\{30323693-0E1E-4365-99FB-5074A5C6F273}">
+          <RegistryValue Type="string" Value="$(var.ProductName)"/>
+          <RegistryValue Name ="InfoTip" Type="string" Value="$(var.ProductName)"/>
+
+          <RegistryValue Key="DefaultIcon" Type="string" Value="[IMAGESFOLDER]Folder.ico,0" />
+
+          <RegistryKey Key="InProcServer32">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]DriveFusion.dll"/>
+            <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment"/>
+          </RegistryKey>
+
+          <RegistryKey Key="ShellFolder">
+            <RegistryValue Name="Attributes" Type="integer" Value="4169154824"/><!--Hex:0xF8804108-->
+            <RegistryValue Name="WantsFORPARSING" Type="string" Value=""/>
+          </RegistryKey>
+        </RegistryKey>
+
+        <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{30323693-0E1E-4365-99FB-5074A5C6F273}">
+          <RegistryValue Type="string" Value="$(var.ProductName)" />
+        </RegistryKey>
+
+        <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Extensions\Approved">
+          <RegistryValue Name="{30323693-0E1E-4365-99FB-5074A5C6F273}" Type="string" Value="$(var.ProductName)" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="ShellExtensionImages" Directory="IMAGESFOLDER">
+      <Component Id="DriveFusionIcon" Guid="68AA930A-2F4D-4F91-9B0D-C7A674167FD5">
+        <File Id="Folder.ico" Source="$(var.FusionSourceDir)Images\Folder.ico" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+
+    <Component Id="ApplicationConfig" Guid="963D5F2C-0866-497C-8B32-2CB8C0FF3131" Directory="INSTALLFOLDER">
+      <RegistryValue Root="HKCU" Key="Software\Google\$(var.ProductName)" Name="logLevel" Type="integer" Value="14" KeyPath="yes"/><!--(LogType::Warning|LogType::Error|LogType::Information)-->
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="08861824-0309-46E0-9787-EB5E88E153FF">
+        <Shortcut Id="UninstallProduct"
+                      Name="Uninstall $(var.ProductName)"
+                      Target="[SystemFolder]msiexec.exe"
+                      Arguments="/x [ProductCode]"
+                      Description="Uninstalls $(var.Product)" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\Google\$(var.ProductName)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>

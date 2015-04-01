@@ -234,6 +234,7 @@ $(SolutionDir)/obj/$(Configuration)/bin/ProjectConfigGenerator.exe $(SolutionDir
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <RegisterOutput>false</RegisterOutput>
+      <AdditionalDependencies>Propsys.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(SolutionDir)/obj/$(Configuration)/bin/ProjectConfigGenerator.exe $(SolutionDir)/ProjectConfig.txt $(SolutionDir)/obj/$(Configuration)/gen/Config.h

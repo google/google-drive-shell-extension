@@ -13,6 +13,18 @@ disk, it only keeps what it needs. When you open or copy files it will download
 them. It will then upload any changes you make locally to keep the folders in
 sync. This means that your content is not available while offline.
 
+# Known Product Limitations
+
+The Google Drive Shell Extension implementation has a few limitations that both users and administrators should be aware of. 
+
+User actions to open a Drive document need to occur through the shell extension interface. If a user accesses documents outside of this method the user will not get the most updated content from Drive and saved changes will not get uploaded back to Drive.
+
+1) For example a user opens MyFile.docx from the shell extension interface in My Computer the tool downloads the file to a temporary location on disk while the user is editing the document, the extension will monitor this file location for save events and upload changes back to Drive. 
+
+However, lets assume the user logs off of the computer and comes back later to open the same MyFile.docx. If the user opens Word and uses the recents menu to open MyFile.docx the file is opened from the temporary file cache location. This action will not invoke the shell extension or its features and the temporary file will be opened in the editor. The shell extension will not be aware of any actions related to the temporary file. If there is a newer revision of the file in Drive it will not be downloaded. The changes saved to the temporary file will not be uploaded to Drive. These same limitations apply to other recents file menus for example in the Start Menu or other file open methods that circumvent the shell extension as the means for accessing the Drive content. 
+
+2) The Google Drive Shell Extension is not accessible to applications virtualized using Microsoft's App-V technology. If using a virtualized application or using the shell extension on a terminal server, the shell extension is only available to natively installed applications. Applications virtualization using Microsoft's App-V are unable to see shell extension. Microsoft recently added new support for specific shell extension features in App-V 5 SP2 however this does not include support for the features needed to support the Google Drive shell extension.
+
 # Supported OS
 
 - Windows 7 32-bit and 64-bit

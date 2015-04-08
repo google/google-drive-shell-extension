@@ -51,10 +51,23 @@ Project dependencies:
 - WiX Toolset - http://wixtoolset.org/
 - Nullsoft Scriptable Install System - http://nsis.sourceforge.net/
 
-Once everything is installed, edit Release.bat and make sure the paths to
-MSBuild.exe and makensis.exe are correct for your machine.
+1. Once everything is installed, clone the project locally
 
-Execute Release.bat.
+    git clone https://github.com/google/google-drive-shell-extension.git
+
+2. Enter the repository's directory
+
+    cd google-drive-shell-extension
+
+3. Update the project's submodules
+
+    git submodule update --init --recursive
+
+4. Follow [google-drive-proxy's](https://github.com/google/google-drive-proxy)
+   build instructions.
+5. Edit Release.bat and make sure the paths to MSBuild.exe and makensis.exe are
+   correct for your machine.
+6. Execute Release.bat.
 
 # Installation instructions
 

@@ -49,22 +49,28 @@ section
       Goto Install32Bit
   ${EndIf}
 
-Install32Bit:
-  SetOutPath "$PROGRAMFILES\Google\Drive Fusion"
-  File ${32BIT_MSI_FILE_PATH}
-  File ${DRIVE_PROXY_MSI_PATH}
-  GoTo ExecuteInstall
-
 Install64Bit:
   SetOutPath "$PROGRAMFILES64\Google\Drive Fusion"
-  File ${64BIT_MSI_FILE_PATH}
+  File /oname=DriveFusion32.msi ${32BIT_MSI_FILE_PATH}
+  File /oname=DriveFusion64.msi ${64BIT_MSI_FILE_PATH}
   File ${DRIVE_PROXY_MSI_PATH}
-  GoTo ExecuteInstall
+  GoTo ExecuteInstall64
 
-ExecuteInstall:
+Install32Bit:
+  SetOutPath "$PROGRAMFILES\Google\Drive Fusion"
+  File /oname=DriveFusion32.msi ${32BIT_MSI_FILE_PATH}
+  File ${DRIVE_PROXY_MSI_PATH}
+  GoTo ExecuteInstall32
+
+ExecuteInstall64:
+  ExecWait '"$SYSDIR\msiexec.exe" /norestart /qn /i "$OUTDIR\DriveFusion64.msi"'
+  Delete /REBOOTOK "$OUTDIR\DriveFusion64.msi"
+  ; Continue to 32bit install
+
+ExecuteInstall32:
+  ExecWait '"$SYSDIR\msiexec.exe" /norestart /qn /i "$OUTDIR\DriveFusion32.msi"'
   ExecWait '"$SYSDIR\msiexec.exe" /norestart /qn /i "$OUTDIR\DriveProxy.msi"'
-  ExecWait '"$SYSDIR\msiexec.exe" /norestart /qn /i "$OUTDIR\DriveFusion.msi"'
-  Delete /REBOOTOK "$OUTDIR\DriveFusion.msi"
+  Delete /REBOOTOK "$OUTDIR\DriveFusion32.msi"
   Delete /REBOOTOK "$OUTDIR\DriveProxy.msi"
   SetRebootFlag false
 

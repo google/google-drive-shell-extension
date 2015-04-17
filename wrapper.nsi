@@ -18,7 +18,7 @@
 !include x64.nsh
 
 ; Set the name of the installer
-Name "Drive Fusion"
+Name "Google Drive Shell Extension"
 
 ; File to output wrapped installer
 OutFile ${OUTPUT_PATH}
@@ -50,14 +50,14 @@ section
   ${EndIf}
 
 Install64Bit:
-  SetOutPath "$PROGRAMFILES64\Google\Drive Fusion"
+  SetOutPath "$PROGRAMFILES64\Google\Google Drive Shell Extension"
   File /oname=DriveFusion32.msi ${32BIT_MSI_FILE_PATH}
   File /oname=DriveFusion64.msi ${64BIT_MSI_FILE_PATH}
   File ${DRIVE_PROXY_MSI_PATH}
   GoTo ExecuteInstall64
 
 Install32Bit:
-  SetOutPath "$PROGRAMFILES\Google\Drive Fusion"
+  SetOutPath "$PROGRAMFILES\Google\Google Drive Shell Extension"
   File /oname=DriveFusion32.msi ${32BIT_MSI_FILE_PATH}
   File ${DRIVE_PROXY_MSI_PATH}
   GoTo ExecuteInstall32
@@ -75,3 +75,4 @@ ExecuteInstall32:
   SetRebootFlag false
 
 sectionEnd
+

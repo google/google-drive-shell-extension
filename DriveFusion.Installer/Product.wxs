@@ -17,7 +17,7 @@ limitations under the License.
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <?include DriveFusionProperties.wxi ?>
   <?define ProductName = "$(var.Product)"?>
-  <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Company)" UpgradeCode="6D2F2994-AB38-4A5E-B766-D5AFC7D8FD31">
+  <Product Id="*" Name="$(var.ProductName) $(var.Version) $(var.Platform)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Company)" UpgradeCode="6D2F2994-AB38-4A5E-B766-D5AFC7D8FD31">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed." />

@@ -63,6 +63,7 @@ limitations under the License.
 #include "PropVariant.h"
 #include "IDList.h"
 #include "PathInfo.h"
+#include "ErrorSignaling.h"
 #include "FileManager.h"
 
 #define IDI_ROOT            100

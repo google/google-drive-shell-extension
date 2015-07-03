@@ -222,6 +222,9 @@
     <ClInclude Include="PropVariant.h">
       <Filter>Common Shell Files\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ErrorSignaling.h">
+      <Filter>Common Shell Files\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FusionGDShell.rc">

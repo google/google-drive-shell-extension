@@ -27,14 +27,14 @@ limitations under the License.
       } \
     } while (false)
 
-#define CHECK_HR(function) \
+#define CHECK_HR(hresult) \
     do \
     { \
-      hr = function; \
+      hr = hresult; \
       if (!SUCCEEDED(hr)) \
       { \
         Log::WriteOutput( \
-            LogType::Error, L"\t" L#function L" failed with hr = %x", hr); \
+            LogType::Error, L"\t" L#hresult L" failed, hr = %x", hr); \
         return hr; \
       } \
     } while (false)
@@ -46,7 +46,8 @@ limitations under the License.
       { \
         hr = hrFail; \
         Log::WriteOutput( \
-            LogType::Error, L"\t" L#condition L" failed, " L#hrFail L" set"); \
+            LogType::Error, \
+            L"\t" L#condition L" failed, " L#hrFail L" = %x", hr); \
         return hr; \
       } \
     } while (false)

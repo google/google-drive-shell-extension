@@ -538,7 +538,7 @@ HRESULT CGDriveShlExt::_GetDataFromID(const std::wstring& id, bool updateCache, 
   {
     if (_fileManager.HasError())
     {
-      Log::WriteOutput(LogType::Error, L"Could not find file with specified id=%s - %s", id.c_str(), _fileManager.ErrorMessage().c_str(), _fileManager.ErrorMessage());
+      Log::WriteOutput(LogType::Error, L"Could not find file with specified id=%s - %s", id.c_str(), _fileManager.ErrorMessage().c_str());
     }
     else
     {

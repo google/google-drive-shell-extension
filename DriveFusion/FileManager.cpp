@@ -154,7 +154,6 @@ const AboutInfo* FileManager::GetAbout()
 
 FileInfo* FileManager::GetFile(std::wstring id, bool updateCache, bool getChildren, bool ignoreError)
 {
-  // Note: lets try always refreshing folders
   Log::WriteOutput(LogType::Debug, L"FileManager::GetFile %s, updateCache=%d, getChildren=%d, ignoreError=%d", id.c_str(), updateCache, getChildren, ignoreError);
 
   // public function should all be locked
@@ -283,22 +282,6 @@ FileInfo* FileManager::GetFile(std::wstring id, bool updateCache, bool getChildr
     if (file == NULL)
     {
       file = _GetFiles(id, updateCache, getChildren, ignoreError);
-    }
-  }
-
-  if (file == NULL || file->Trashed == true) // I'm not sure why I am having to check this right now.. lets see if it fixes the issue I'm having
-  {
-    // File definitely doesn't exist
-    if (!IsRootId(id) && _ignoredIds.find(id) == _ignoredIds.end())
-    {
-      if (file != NULL)
-      {
-        file->AddRef();
-      }
-
-      _ignoredIds.insert(FileMapItem(id, file));
-
-      Log::Error(L"FileManager::GetFile() We were asked to lookup an id that we are sure doesn't exist, adding id to the ignore list");
     }
   }
 

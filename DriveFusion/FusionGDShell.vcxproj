@@ -350,6 +350,7 @@ $(SolutionDir)/obj/$(Configuration)/bin/ProjectConfigGenerator.exe $(SolutionDir
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChildItemIDPolicy.h" />
+    <ClInclude Include="ErrorSignaling.h" />
     <ClInclude Include="IdList.h" />
     <ClInclude Include="DisposableHandle.h" />
     <ClInclude Include="dllmain.h" />

@@ -51,15 +51,15 @@ Project dependencies:
 - WiX Toolset - http://wixtoolset.org/
 - Nullsoft Scriptable Install System - http://nsis.sourceforge.net/
 
-1. Once everything is installed, clone the project locally
+1. Once everything is installed, clone the project locally.
 
     git clone https://github.com/google/google-drive-shell-extension.git
 
-2. Enter the repository's directory
+2. Enter the repository's directory.
 
     cd google-drive-shell-extension
 
-3. Update the project's submodules
+3. Update the project's submodules.
 
     git submodule update --init --recursive
 

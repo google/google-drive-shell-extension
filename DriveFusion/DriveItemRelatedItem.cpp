@@ -293,93 +293,46 @@ STDMETHODIMP CDriveItemRelatedItem::RecycleItem(__in  IShellItem *psiSource, __i
 STDMETHODIMP CDriveItemRelatedItem::RemoveItem(__in  IShellItem *psiSource, __in  TRANSFER_SOURCE_FLAGS /*flags*/)
 {
   Log::WriteOutput(LogType::Warning, L"CDriveItemRelatedItem::RemoveItem()");
-
   HRESULT hr = S_OK;
 
-  std::unique_ptr<IIdentityName> idName;
+  CComPtr<IIdentityName> idName;
+  CHECK_HR(psiSource->BindToHandler(NULL, BHID_SFViewObject, IID_PPV_ARGS(&idName)));
+  
+  CIdList idPidl;
+  {
+    LPITEMIDLIST tmpPidl = nullptr;
+    CHECK_HR(idName->GetItemIDList(&tmpPidl));
+    idPidl.Reset(tmpPidl);
+  }
+
+  CDriveItem item;
+  CHECK_HR(_gDriveShlExt->GetDriveItemFromIDList(idPidl, true, false, item));
+  
   std::vector<std::wstring> ids;
+  ids.push_back(item.Id());
+
   std::vector<std::wstring> deletedIds;
+  CHECK_TRUE(_gDriveShlExt->FileManager()->DeleteFiles(ids, &deletedIds), E_FAIL);
+  // We only had one item, so if there is an item, then it must have been deleted ok.
+  CHECK_TRUE(deletedIds.size() == 1, E_FAIL);
+  
+  LONG eventId = item.IsFile()? SHCNE_DELETE : SHCNE_RMDIR;
+  SHChangeNotify(eventId, SHCNF_IDLIST | SHCNF_FLUSH, idPidl, NULL);
 
+  CComPtr<IShellItem> parent;
+  CHECK_HR(psiSource->GetParent(&parent));
+
+  CComPtr<IIdentityName> parentIdName;
+  CHECK_HR(parent->BindToHandler(NULL, BHID_SFViewObject, IID_PPV_ARGS(&parentIdName)));
+
+  CIdList parentPidl;
   {
-    IIdentityName* tmpIdName = nullptr;
-    hr = psiSource->BindToHandler(NULL, BHID_SFViewObject, IID_PPV_ARGS(&tmpIdName));
-    idName.reset(tmpIdName);
+    LPITEMIDLIST tmpPidl = nullptr;
+    CHECK_HR(parentIdName->GetItemIDList(&tmpPidl));
+    parentPidl.Reset(tmpPidl);
   }
 
-  if (SUCCEEDED(hr))
-  {
-    CIdList pidl;
-    {
-      LPITEMIDLIST tmpPidl = nullptr;
-      hr = idName->GetItemIDList(&tmpPidl);
-      pidl.Reset(tmpPidl);
-    }
-
-    if (SUCCEEDED(hr))
-    {
-      CDriveItem item;
-
-      hr = _gDriveShlExt->GetDriveItemFromIDList(pidl, true, false, item);
-
-      if (SUCCEEDED(hr))
-      {
-        ids.push_back(item.Id());
-
-        if(!_gDriveShlExt->FileManager()->DeleteFiles(ids, &deletedIds))
-        {
-          std::wstring message = L"CDriveItemRelatedItem::RemoveItem() Cannot delete item(s) - " + _gDriveShlExt->FileManager()->ErrorMessage();
-
-          Log::WriteOutput(LogType::Error, message.c_str());
-        }
-        else
-        {
-          if (deletedIds.size() == 1) // we only had one item, so if there is an item, then it must have been deleted ok
-          {
-            if (item.IsFile())
-            {
-              SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, pidl, NULL);
-            }
-            else
-            {
-              SHChangeNotify(SHCNE_RMDIR, SHCNF_IDLIST | SHCNF_FLUSH, pidl, NULL);
-            }
-
-            std::unique_ptr<IShellItem> parent;
-            {
-              IShellItem* tmpParent = nullptr;
-              hr = psiSource->GetParent(&tmpParent);
-              parent.reset(tmpParent);
-            }
-
-            if (SUCCEEDED(hr))
-            {
-              std::unique_ptr<IIdentityName> parentIdName;
-              {
-                IIdentityName* tmpParentIdName = nullptr;
-                hr = parent->BindToHandler(NULL, BHID_SFViewObject, IID_PPV_ARGS(&tmpParentIdName));
-                parentIdName.reset(tmpParentIdName);
-              }
-
-              if (SUCCEEDED(hr))
-              {
-                CIdList pidl;
-                {
-                  LPITEMIDLIST tmpPidl = nullptr;
-                  hr = parentIdName->GetItemIDList(&tmpPidl);
-                  pidl.Reset(tmpPidl);
-                }
-
-                if (SUCCEEDED(hr))
-                {
-                  SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSH, pidl, NULL);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSH, parentPidl, NULL);
 
   return hr;
 }

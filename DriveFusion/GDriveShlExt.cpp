@@ -544,7 +544,7 @@ HRESULT CGDriveShlExt::_GetDataFromID(const std::wstring& id, bool updateCache, 
     {
       Log::WriteOutput(LogType::Error, L"Could not find file with specified id=%s", id.c_str());
     }
-    CHECK_HR(HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
+    hr = E_INVALIDARG;
   }
 
   return hr;
@@ -1301,23 +1301,32 @@ STDMETHODIMP CGDriveShlExt::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCU
   try
   {
     Log::WriteOutput(LogType::Debug, L"IShellFolder::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY rgpidl, __inout SFGAOF *rgfInOut)", cidl);
-    HRESULT hr = S_OK;
+    HRESULT hr = E_INVALIDARG;
 
-    CHECK_ARG(rgpidl != nullptr);
-    CHECK_ARG(rgfInOut != nullptr);
-
-    ULONG rgfOut = *rgfInOut;
-
-    for (UINT i = 0; i < cidl; i++)
+    if (cidl && rgpidl)
     {
-      FileInfo* fileInfo = nullptr;
-      CHECK_HR(_GetDataFromIDList(rgpidl[i], false, false, &fileInfo));
-      DWORD dwMask = 0;
-      CHECK_HR(_GetAttributesOf(fileInfo, &dwMask));
-      rgfOut &= dwMask;
+      hr = S_OK;
+
+      ULONG rgfOut = *rgfInOut;
+
+      for (UINT i = 0; i < cidl; i++)
+      {
+        DWORD rgfItem;
+
+        hr = _GetAttributesOf(rgpidl[i], *rgfInOut, &rgfItem);
+
+        if (!SUCCEEDED(hr))
+          break;
+
+        rgfOut &= rgfItem;
+      }
+
+      if (SUCCEEDED(hr))
+      {
+        *rgfInOut = rgfOut;
+      }
     }
 
-    *rgfInOut = rgfOut;
     return hr;
   }
   catch (...)
@@ -2716,7 +2725,6 @@ STDMETHODIMP CGDriveShlExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags
   try
   {
     Log::WriteOutput(LogType::Debug, L"IShellFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags, __out STRRET *psrName)");
-    HRESULT hr = S_OK;
 
     static const BYTE _indices[] =
     {
@@ -2761,8 +2769,12 @@ STDMETHODIMP CGDriveShlExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags
       index |= DISPLAYNAMEOFINFO::GDNM_FOREDITING;
     }
 
-    CHECK_HR((this->*_DisplayNameOfInfo[_indices[index]]._GetDisplayNameOf)(pidl, uFlags, &psrName->pOleStr));
-    psrName->uType = STRRET_WSTR;
+    HRESULT hr = (this->*_DisplayNameOfInfo[_indices[index]]._GetDisplayNameOf)(pidl, uFlags, &psrName->pOleStr);
+
+    if (SUCCEEDED(hr))
+    {
+      psrName->uType = STRRET_WSTR;
+    }
 
     return hr;
   }

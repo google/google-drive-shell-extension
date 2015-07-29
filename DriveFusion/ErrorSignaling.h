@@ -15,6 +15,10 @@ limitations under the License.
 */
 #pragma once
 
+#define LSTR_(value) L#value
+
+#define LSTR(value) LSTR_(value)
+
 #define CHECK_ARG(condition) \
     do \
     { \
@@ -22,7 +26,8 @@ limitations under the License.
       { \
         hr = E_INVALIDARG; \
         Log::WriteOutput( \
-            LogType::Error, L"\tArgument failed condition " L#condition); \
+            LogType::Error, LSTR(__FILE__) L":" LSTR(__LINE__) \
+            L" - Argument failed condition " L#condition); \
         return hr; \
       } \
     } while (false)
@@ -34,7 +39,8 @@ limitations under the License.
       if (!SUCCEEDED(hr)) \
       { \
         Log::WriteOutput( \
-            LogType::Error, L"\t" L#hresult L" failed, hr = %x", hr); \
+            LogType::Error, LSTR(__FILE__) L":" LSTR(__LINE__) \
+            L" - " L#hresult L" failed, hr = %x", hr); \
         return hr; \
       } \
     } while (false)
@@ -46,8 +52,8 @@ limitations under the License.
       { \
         hr = hrFail; \
         Log::WriteOutput( \
-            LogType::Error, \
-            L"\t" L#condition L" failed, " L#hrFail L" = %x", hr); \
+            LogType::Error, LSTR(__FILE__) L":" LSTR(__LINE__) \
+            L" - " L#condition L" failed, " L#hrFail L" = %x", hr); \
         return hr; \
       } \
     } while (false)

@@ -1,4 +1,4 @@
-Version 1.8.55.0
+Version 1.8.55.1
 Title Google Drive Shell Extension
 Description A shell extension to map your Google Drive.
 Company Google Inc

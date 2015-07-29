@@ -2387,172 +2387,97 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
   try
   {
     Log::WriteOutput(LogType::Warning, L"IShellFolder::ParseDisplayName name=%s", pszDisplayName);
+    HRESULT hr = S_OK;
+
+    CHECK_ARG(pszDisplayName != nullptr);
+    CHECK_ARG(ppidl != nullptr);
+
     SetDialogType(hwnd);
 
     // pdwAttrbiute is a set of SFGAOF flags, it's optional to filter by these
 
-    HRESULT hr = S_OK;
     std::wstring nameOfChild; // To be determined
     std::wstring pathFollowingChild(pszDisplayName);
     CIdList ppidlOfChild;
 
     BIND_OPTS options;
-    hr = _GetContextOptions(pbc, options);
+    CHECK_HR(_GetContextOptions(pbc, options));
 
-    if (SUCCEEDED(hr))
+    if (SUCCEEDED(
+        _NextNameSegment(pathFollowingChild, nameOfChild, &ppidlOfChild, pdwAttributes)))
     {
-      hr = _NextNameSegment(pathFollowingChild, nameOfChild, &ppidlOfChild, pdwAttributes);
-
-      if (SUCCEEDED(hr))
+      if (pathFollowingChild.length() == 0)
       {
-        if (pathFollowingChild.length() == 0)
-        {
-          if ((options.grfMode & STGM_CREATE) > 0)
-          {
-            // We found a matching entry, but they want to create a new item with the same name, this we will not allow, so fail it out.
-            hr = HRESULT_FROM_WIN32(ERROR_FILE_EXISTS);
-          }
-          else if (options.grfFlags & BIND_JUSTTESTEXISTENCE)
-          {
-            hr = HRESULT_FROM_WIN32(ERROR_FILE_EXISTS);
-          }
-          else
-          {
-            CIdList outPidl = *ppidl;
-            hr = CIdList::Clone(ppidlOfChild, outPidl);
-            *ppidl = outPidl.Release();
-          }
-        }
-        else
-        {
-          CComPtr<IShellFolder> spsf;
-
-          hr = BindToObject(ppidlOfChild, pbc, IID_PPV_ARGS(&spsf));
-
-          if (SUCCEEDED(hr))
-          {
-            CIdList spidlNext;
-            {
-              LPITEMIDLIST tmpNext;
-              // This const cast is dangerous, and relies on knowing that ParseDisplayName will not attempt to overwrite the parameter
-              // Since we know we're calling this on only our own objects, we can be sure.
-              // DO NOT EDIT pszDisplayName in this function
-              hr = spsf->ParseDisplayName(hwnd, pbc, const_cast<WCHAR*>(pathFollowingChild.c_str()), NULL, &tmpNext, pdwAttributes);
-              spidlNext.Reset(tmpNext);
-            }
-
-            if (SUCCEEDED(hr))
-            {
-              CIdList outPidl = *ppidl;
-              hr = CIdList::Combine(ppidlOfChild, spidlNext, outPidl);
-              *ppidl = outPidl.Release();
-            }
-          }
-        }
+        CHECK_TRUE((options.grfMode & STGM_CREATE) == 0,
+            // We found a matching entry, but they want to create a new item
+            // with the same name, this we will not allow, so fail it out.
+            HRESULT_FROM_WIN32(ERROR_FILE_EXISTS)); 
+        CHECK_TRUE((options.grfFlags & BIND_JUSTTESTEXISTENCE) == 0,
+            HRESULT_FROM_WIN32(ERROR_FILE_EXISTS));
+        
+        CIdList outPidl = *ppidl;
+        CHECK_HR(CIdList::Clone(ppidlOfChild, outPidl));
+        *ppidl = outPidl.Release();
       }
       else
       {
-        if ((options.grfMode & STGM_CREATE) > 0)
+        CComPtr<IShellFolder> spsf;
+
+        CHECK_HR(BindToObject(ppidlOfChild, pbc, IID_PPV_ARGS(&spsf)));
+
+        CIdList spidlNext;
         {
-          if (pathFollowingChild.length() == 0 && nameOfChild.length() > 0)
-          {
-            if (nameOfChild.find(L"Google Drive") == 0)
-            {
-              hr = E_FAIL;
-              Log::Error(L"CGDriveShlExt::ParseDisplayName() service cannot create root file");
-            }
-            else
-            {
-              FileInfo* child = NULL;
-
-              bool isFolder = pdwAttributes != NULL && ((*pdwAttributes) & FILE_ATTRIBUTE_DIRECTORY) > 0;
-
-              if (_fileManager.InsertFile(_id, nameOfChild, isFolder, &child))
-              {
-                hr = _CreateItemID(child, &ppidlOfChild);
-
-                if (SUCCEEDED(hr))
-                {
-                  {
-                    CIdList outPidl = *ppidl;
-                    hr = CIdList::Clone(ppidlOfChild, outPidl);
-                    *ppidl = outPidl.Release();
-                  }
-
-                  if (!child->CreatePathTo())
-                  {
-                    Log::Error(L"CGDriveShlExt::ParseDisplayName() failed to create directory for placeholder file");
-                  }
-
-                  FileInfo::Release(&child);
-
-                  CIdList pidlPath;
-
-                  HRESULT hr = CIdList::Combine(_spidl, *ppidl, pidlPath);
-
-                  _didUpdate = true;
-
-                  if (!SUCCEEDED(hr))
-                  {
-                    Log::WriteOutput(LogType::Error, L"CombineIDLists returned hr=%d", hr);
-                  }
-                  else
-                  {
-                    if (isFolder)
-                    {
-                      SHChangeNotify(SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, pidlPath, pidlPath);
-                    }
-                    else
-                    {
-                      SHChangeNotify(SHCNE_CREATE, SHCNF_IDLIST | SHCNF_FLUSH, pidlPath, pidlPath);
-                    }
-                  }
-
-                  SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSH, _spidl, NULL);
-                }
-              }
-              else
-              {
-                hr = E_FAIL;
-                Log::Error(L"CGDriveShlExt::ParseDisplayName() service failed to create a new file");
-              }
-            }
-          }
-          else
-          {
-            Log::Error(L"CGDriveShlExt::ParseDisplayName() something unexpected happened");
-          }
+          LPITEMIDLIST tmpNext;
+          // This const cast is dangerous, and relies on knowing that ParseDisplayName will not attempt to overwrite the parameter
+          // Since we know we're calling this on only our own objects, we can be sure.
+          // DO NOT EDIT pszDisplayName in this function
+          CHECK_HR(spsf->ParseDisplayName(hwnd, pbc, const_cast<WCHAR*>(pathFollowingChild.c_str()), NULL, &tmpNext, pdwAttributes));
+          spidlNext.Reset(tmpNext);
         }
-        else
-        {
-          hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        }
+
+        CIdList outPidl = *ppidl;
+        CHECK_HR(CIdList::Combine(ppidlOfChild, spidlNext, outPidl));
+        *ppidl = outPidl.Release();
       }
     }
-
-    if (pchEaten != NULL )
+    else
     {
-      if (SUCCEEDED(hr))
+      CHECK_TRUE((options.grfMode & STGM_CREATE) != 0,
+          HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
+      CHECK_TRUE(pathFollowingChild.length() == 0 && nameOfChild.length() > 0,
+          E_FAIL);
+      CHECK_TRUE(nameOfChild.find(L"Google Drive") != 0,
+          // Service cannot create root file
+          E_FAIL);
+    
+      FileInfo* child = NULL;
+      bool isFolder = pdwAttributes != NULL && ((*pdwAttributes) & FILE_ATTRIBUTE_DIRECTORY) > 0;
+      CHECK_TRUE(_fileManager.InsertFile(_id, nameOfChild, isFolder, &child),
+          E_FAIL);
+      CHECK_HR(_CreateItemID(child, &ppidlOfChild));
+            
       {
-        // We parse the entire string, or we fail.
-        (*pchEaten) = (ULONG)_tcslen(pszDisplayName);
+        CIdList outPidl = *ppidl;
+        CHECK_HR(CIdList::Clone(ppidlOfChild, outPidl));
+        *ppidl = outPidl.Release();
       }
+
+      CHECK_TRUE(child->CreatePathTo(), E_FAIL);
+      FileInfo::Release(&child);
+
+      CIdList pidlPath;
+      CHECK_HR(CIdList::Combine(_spidl, *ppidl, pidlPath));
+      _didUpdate = true;
+
+      LONG eventId = isFolder? SHCNE_MKDIR : SHCNE_CREATE;
+      SHChangeNotify(eventId, SHCNF_IDLIST | SHCNF_FLUSH, pidlPath, pidlPath);
+      SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSH, _spidl, NULL);
     }
 
-    if (!SUCCEEDED(hr))
+    if (pchEaten != NULL)
     {
-      CDriveItem driveItem;
-
-      HRESULT errorhr = _GetDataFromIDList(_spidl, false, false, driveItem);
-
-      if (SUCCEEDED(errorhr))
-      {
-        Log::WriteOutput(LogType::Error, L"ParseDisplayName failed trying to parse to %s from %s", pszDisplayName, driveItem.ItemName().c_str());
-      }
-      else
-      {
-        Log::WriteOutput(LogType::Error, L"ParseDisplayName failed trying to parse %s", pszDisplayName);
-      }
+      // We parse the entire string, or we fail.
+      (*pchEaten) = (ULONG)_tcslen(pszDisplayName);
     }
 
     return hr;
@@ -2570,6 +2495,7 @@ HRESULT CGDriveShlExt::_NextNameSegment(__inout std::wstring& ppszInOut, __out s
   try
   {
     Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_NextNameSegment");
+    HRESULT hr = S_OK;
 
     std::wstring seperator = L"\\";
 
@@ -2588,40 +2514,31 @@ HRESULT CGDriveShlExt::_NextNameSegment(__inout std::wstring& ppszInOut, __out s
 
     CDriveItem item;
 
-    HRESULT hr = _GetDataFromIDList(_spidl, false, true, item);
+    CHECK_HR(_GetDataFromIDList(_spidl, false, true, item));
 
-    if (SUCCEEDED(hr))
+    hr = E_FAIL;
+    auto& itemFiles = *item.Files();
+    for (auto it = itemFiles.begin(); it != itemFiles.end(); it++)
     {
-      hr = E_FAIL;
+      FileInfo* child = *it;
 
-      for (std::vector<FileInfo*>::iterator it = item.Files()->begin(); it != item.Files()->end(); it++)
+      // This showed up with WantsFORPARSING was set, which is not normally set
+      // lets just keep this code in place till we find a reason not to
+      if (child->Id.compare(ppszSegment) == 0 && child->Title.compare(ppszInOut) == 0)
       {
-        FileInfo* child = *it;
+        // changing ppszSegment here, so the next compare is different
+        ppszSegment.assign(ppszInOut);
+        ppszInOut.assign(L"");
+      }
 
-        // This showed up with WantsFORPARSING was set, which is not normally set
-        // lets just keep this code in place till we find a reason not to
-        if (child->Id.compare(ppszSegment) == 0 && child->Title.compare(ppszInOut) == 0)
+      if (child->Title.compare(ppszSegment) == 0) // Should this be case insensitive?  Windows doesn't allow it but Google does
+      {
+        if (pdwAttributes != NULL)
         {
-          // changing ppszSegment here, so the next compare is different
-          ppszSegment.assign(ppszInOut);
-          ppszInOut.assign(L"");
-        }
-
-        if (child->Title.compare(ppszSegment) == 0) // Should this be case insensitive?  Windows doesn't allow it but Google does
-        {
-          hr = _CreateItemID(child, ppidlOut);
-
-          if (SUCCEEDED(hr) && pdwAttributes != NULL)
-          {
-            DWORD dwMask = 0;
-
-            hr = _GetAttributesOf(child, &dwMask);
-
-            if (SUCCEEDED(hr))
-            {
-              *pdwAttributes = *pdwAttributes & dwMask;
-            }
-          }
+          CHECK_HR(_CreateItemID(child, ppidlOut));
+          DWORD dwMask = 0;
+          CHECK_HR(_GetAttributesOf(child, &dwMask));
+          *pdwAttributes = *pdwAttributes & dwMask;
         }
       }
     }

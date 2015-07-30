@@ -783,14 +783,11 @@ STDMETHODIMP CGDriveShlExt::GetCurFolder(__out PIDLIST_ABSOLUTE *ppidl)
   try
   {
     Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::GetCurFolder %s", _id.c_str());
-    CIdList clone = *ppidl;
-    HRESULT hr = CIdList::Clone(_spidl, clone);
-    *ppidl = clone.Release();
+    HRESULT hr = S_OK;
 
-    if (!SUCCEEDED(hr))
-    {
-      Log::WriteOutput(LogType::Error, L"CloneFullIDList returned hr=%d", hr);
-    }
+    CIdList clone;
+    CHECK_HR(CIdList::Clone(_spidl, clone));
+    *ppidl = clone.Release();
 
     return hr;
   }
@@ -1250,40 +1247,24 @@ HRESULT CGDriveShlExt::_CreateItemID(Fusion::GoogleDrive::FileInfo* fileInfo, CI
 {
   try
   {
-    Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_CreateItemID(Fusion::GoogleDrive::FileInfo* fileInfo, PITEMID_CHILD* ppidl)");
-    if (fileInfo->Id.length() > 200)
-    {
-      Log::WriteOutput(LogType::Error, L"CGDriveShlExt::_CreateItemID file ID is too long, this is extremely bad news, we'll have to make the buffer bigger");
-    }
-
     HRESULT hr = S_OK;
-    errno_t errnum;
+    Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_CreateItemID(Fusion::GoogleDrive::FileInfo* fileInfo, PITEMID_CHILD* ppidl)");
+    CHECK_TRUE(fileInfo->Id.length() <= 200,
+        // If we fail this check, we'll need to increase the size of the
+        // DriveItemSignature buffer.
+        E_FAIL);
 
     DriveItemSignature pri;
-    errnum = wcscpy_s(pri.Id, fileInfo->Id.c_str());
+    CHECK_TRUE(wcscpy_s(pri.Id, fileInfo->Id.c_str()) == 0,
+        E_FAIL);
 
-    if (errnum != 0)
     {
-      hr = E_FAIL;
-    }
-
-    if (!SUCCEEDED(hr))
-    {
-      Log::WriteOutput(LogType::Error, L"wcscpy_s returned hr=%d", errnum);
-    }
-    else
-    {
-      {
-        LPITEMIDLIST tmpPidl;
-        // We used to create an IPropertyStore, but we were not using it for anything, and also have problems with comparing the same ID which had different property stores.
-        hr = CreateItemID(&pri, NULL, &tmpPidl);
-        ppidl->Reset(tmpPidl);
-      }
-
-      if (!SUCCEEDED(hr))
-      {
-        Log::WriteOutput(LogType::Error, L"CreateItemID returned hr=%d", hr);
-      }
+      LPITEMIDLIST tmpPidl;
+      // We used to create an IPropertyStore, but we were not using it for
+      // anything, and also have problems with comparing the same ID which had
+      // different property stores.
+      CHECK_HR(CreateItemID(&pri, nullptr, &tmpPidl));
+      ppidl->Reset(tmpPidl);
     }
 
     return hr;
@@ -2415,7 +2396,7 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
         CHECK_TRUE((options.grfFlags & BIND_JUSTTESTEXISTENCE) == 0,
             HRESULT_FROM_WIN32(ERROR_FILE_EXISTS));
         
-        CIdList outPidl = *ppidl;
+        CIdList outPidl;
         CHECK_HR(CIdList::Clone(ppidlOfChild, outPidl));
         *ppidl = outPidl.Release();
       }
@@ -2435,7 +2416,7 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
           spidlNext.Reset(tmpNext);
         }
 
-        CIdList outPidl = *ppidl;
+        CIdList outPidl;
         CHECK_HR(CIdList::Combine(ppidlOfChild, spidlNext, outPidl));
         *ppidl = outPidl.Release();
       }
@@ -2457,7 +2438,7 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
       CHECK_HR(_CreateItemID(child, &ppidlOfChild));
             
       {
-        CIdList outPidl = *ppidl;
+        CIdList outPidl;
         CHECK_HR(CIdList::Clone(ppidlOfChild, outPidl));
         *ppidl = outPidl.Release();
       }

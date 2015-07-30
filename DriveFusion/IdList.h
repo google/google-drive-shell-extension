@@ -25,13 +25,13 @@ class CIdList
     CIdList():idList_(nullptr) {}
     // Constructor takes ownership
     CIdList(LPITEMIDLIST pidl):idList_(pidl) {}
-    ~CIdList() { CoTaskMemFree(idList_); }
+    ~CIdList() { DeleteIdList(); }
 
     // Implicitly convertible to CONST pointer
     operator LPCITEMIDLIST() const { return idList_; }
     // Reassigns id list and takes ownership
-    void Reset(LPITEMIDLIST& pidl) { CoTaskMemFree(idList_); idList_ = pidl; pidl = nullptr; }
-    void Reset() { CoTaskMemFree(idList_); idList_ = nullptr; }
+    void Reset(LPITEMIDLIST& pidl) { DeleteIdList(); idList_ = pidl; pidl = nullptr; }
+    void Reset() { DeleteIdList(); idList_ = nullptr; }
     // Returns pointer to id list and releases ownership
     LPITEMIDLIST Release() { LPITEMIDLIST idList = idList_; idList_ = nullptr; return idList; }
 
@@ -40,6 +40,7 @@ class CIdList
     static HRESULT CloneChild(LPCITEMIDLIST pidl, CIdList& pidlDest);
 
   private:
+    void DeleteIdList() { if (idList_ != nullptr) CoTaskMemFree(idList_); }
     LPITEMIDLIST idList_;
 
     // Disallow copy and assignment

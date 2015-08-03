@@ -2373,6 +2373,11 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
     CHECK_ARG(pszDisplayName != nullptr);
     CHECK_ARG(ppidl != nullptr);
 
+    if (pdwAttributes != nullptr)
+    {
+      Log::WriteOutput(LogType::Warning, L"Attributes= %d", *pdwAttributes);
+    }
+
     SetDialogType(hwnd);
 
     // pdwAttrbiute is a set of SFGAOF flags, it's optional to filter by these
@@ -2383,6 +2388,7 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
 
     BIND_OPTS options;
     CHECK_HR(_GetContextOptions(pbc, options));
+    Log::WriteOutput(LogType::Warning, L"Options flags= %d, mode = %d", options.grfFlags, options.grfMode);
 
     if (SUCCEEDED(
         _NextNameSegment(pathFollowingChild, nameOfChild, &ppidlOfChild, pdwAttributes)))

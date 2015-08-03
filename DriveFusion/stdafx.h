@@ -38,6 +38,7 @@ limitations under the License.
 #include "Config.h"
 #include "DriveServiceConfig.h"
 
+#include <memory>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlctl.h>

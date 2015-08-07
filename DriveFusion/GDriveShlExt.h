@@ -236,6 +236,9 @@ private:
   static Fusion::GoogleDrive::FileManager _fileManager;
   static IDataObject* _contextMenuSelection;
   static bool _ignoreGetFilesError;
+  static std::wstring _newFileName;
+  static DWORD _newFileAttributes;
+  static CIdList _newFilePidl;
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(GDriveShlExt), CGDriveShlExt)

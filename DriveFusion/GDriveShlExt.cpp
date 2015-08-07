@@ -125,12 +125,17 @@ static const GUID SDefined_Unknown4 = // {42339A50-7A91-44F9-87AC-37E6EC1B1A88} 
 {0x42339A50, 0x7A91, 0x44F9, {0x87, 0xAC, 0x37, 0xE6, 0xEC, 0x1B, 0x1A, 0x88}};
 
 //
+const DriveItemSignature kNewFileSignature = { L"New File" };
+
 bool CGDriveShlExt::_didUpdate = false;
 DWORD CGDriveShlExt::_previousRGFIN = 0;
 CGDriveShlExt::HOSTINFO::TYPE CGDriveShlExt::_hostType = CGDriveShlExt::HOSTINFO::Unknown;
 UINT CGDriveShlExt::_lastViewUIMsg = 0;
 IDataObject* CGDriveShlExt::_contextMenuSelection = NULL;
 bool CGDriveShlExt::_ignoreGetFilesError = true;
+std::wstring CGDriveShlExt::_newFileName;
+DWORD CGDriveShlExt::_newFileAttributes = 0;
+CIdList CGDriveShlExt::_newFilePidl;
 
 #ifdef DEBUG
 // both are false, really don't want to debug service calls right now
@@ -1316,6 +1321,27 @@ HRESULT CGDriveShlExt::_GetAttributesOf(PCUITEMID_CHILD pidl, DWORD rgfIn, __out
     CHECK_ARG(pidl != nullptr);
     CHECK_ARG(prgfOut != nullptr);
 
+    if (ChildIdFromPidl(pidl) == kNewFileSignature.Id)
+    {
+      if (_newFilePidl == nullptr)
+      {
+        FileInfo* child = nullptr;
+        bool isFolder = (_newFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        CHECK_TRUE(_fileManager.InsertFile(_id, _newFileName, isFolder, &child),
+            E_FAIL);
+        CHECK_HR(_CreateItemID(child, &_newFilePidl));
+        
+        CIdList pidlPath;
+        CHECK_HR(CIdList::Combine(_spidl, _newFilePidl, pidlPath));
+        _didUpdate = true;
+
+        LONG eventId = isFolder? SHCNE_MKDIR : SHCNE_CREATE;
+        SHChangeNotify(eventId, SHCNF_IDLIST | SHCNF_FLUSH, pidlPath, pidlPath);
+        SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSH, _spidl, NULL);
+      }
+      pidl = _newFilePidl;
+    }
+
     FileInfo* fileInfo = nullptr;
     CHECK_HR(_GetDataFromIDList(pidl, false, false, &fileInfo));
     Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_GetAttributesOf %s, flags=%0x", fileInfo->Id.c_str(), rgfIn);
@@ -1476,6 +1502,11 @@ STDMETHODIMP CGDriveShlExt::BindToObject(PCUIDLIST_RELATIVE pidl, __in IBindCtx 
     CHECK_ARG(ppv != nullptr);
 
     Log::WriteOutput(LogType::Debug, L"IShellFolder::BindToObject");
+
+    if (ChildIdFromPidl(pidl) == kNewFileSignature.Id)
+    {
+      pidl = _newFilePidl;
+    }
 
     *ppv = NULL;
     hr = E_NOINTERFACE;
@@ -2371,28 +2402,10 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
           // Service cannot create root file
           E_FAIL);
     
-      FileInfo* child = NULL;
-      bool isFolder = pdwAttributes != NULL && ((*pdwAttributes) & FILE_ATTRIBUTE_DIRECTORY) > 0;
-      CHECK_TRUE(_fileManager.InsertFile(_id, nameOfChild, isFolder, &child),
-          E_FAIL);
-      CHECK_HR(_CreateItemID(child, &ppidlOfChild));
-            
-      {
-        CIdList outPidl;
-        CHECK_HR(CIdList::Clone(ppidlOfChild, outPidl));
-        *ppidl = outPidl.Release();
-      }
-
-      CHECK_TRUE(child->CreatePathTo(), E_FAIL);
-      FileInfo::Release(&child);
-
-      CIdList pidlPath;
-      CHECK_HR(CIdList::Combine(_spidl, *ppidl, pidlPath));
-      _didUpdate = true;
-
-      LONG eventId = isFolder? SHCNE_MKDIR : SHCNE_CREATE;
-      SHChangeNotify(eventId, SHCNF_IDLIST | SHCNF_FLUSH, pidlPath, pidlPath);
-      SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSH, _spidl, NULL);
+      _newFileName = nameOfChild;
+      _newFileAttributes = pdwAttributes != nullptr? *pdwAttributes : 0;
+      CHECK_HR(CreateItemID(&kNewFileSignature, nullptr, ppidl));
+      _newFilePidl.Reset();
     }
 
     if (pchEaten != NULL)
@@ -2606,6 +2619,11 @@ STDMETHODIMP CGDriveShlExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags
     if (uFlags & SHGDN_FOREDITING)
     {
       index |= DISPLAYNAMEOFINFO::GDNM_FOREDITING;
+    }
+
+    if (ChildIdFromPidl(pidl) == kNewFileSignature.Id)
+    {
+      pidl = _newFilePidl;
     }
 
     CHECK_HR((this->*_DisplayNameOfInfo[_indices[index]]._GetDisplayNameOf)(pidl, uFlags, &psrName->pOleStr));

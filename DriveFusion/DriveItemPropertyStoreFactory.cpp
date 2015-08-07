@@ -65,17 +65,15 @@ void CDriveItemPropertyStoreFactory::FinalRelease()
 
 HRESULT CDriveItemPropertyStoreFactory::_Initialize(CGDriveShlExt* gDriveShlExt, PCUITEMID_CHILD pidl)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"CDriveItemPropertyStoreFactory::_Initialize()");
 
-  HRESULT hr = CIdList::CloneChild(pidl, _cpidl);
+  CHECK_HR(CIdList::CloneChild(pidl, _cpidl));
 
-  if (SUCCEEDED(hr))
-  {
-    _gDriveShlExt = gDriveShlExt;
-
-    _gDriveShlExt->AddRef();
-  }
-  return S_OK;
+  _gDriveShlExt = gDriveShlExt;
+  _gDriveShlExt->AddRef();
+  
+  return hr;
 }
 
 STDMETHODIMP CDriveItemPropertyStoreFactory::GetPropertyStore(GETPROPERTYSTOREFLAGS flags, __in_opt IUnknown * /*punkFactory*/, REFIID riid, __deref_out void **ppv)

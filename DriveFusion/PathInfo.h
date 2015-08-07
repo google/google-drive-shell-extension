@@ -25,5 +25,6 @@ public:
   static bool FileExists(const std::wstring& path);
   static std::wstring CombinePath(const std::wstring& path1, const std::wstring& path2);
   static std::wstring GetFileUrl(const std::wstring& path);
+  static void CreatePath(const std::wstring& path, size_t last = std::wstring::npos);
 };
 

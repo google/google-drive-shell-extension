@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "stdafx.h"
-#include "GDriveShlExt.h"
-#include "ChildItemIDPolicy.h"
-#include "ShellFolderViewCBHandler.h"
 #include <ShellAPI.h>
+#include "ChildItemIDPolicy.h"
 #include "DriveItemDataObject.h"
-#include "DriveItemRelatedItem.h"
 #include "DriveItemPropertyStoreFactory.h"
 #include "DriveItemPropertyStore.h"
+#include "DriveItemRelatedItem.h"
 #include "DriveItemStream.h"
+#include "GDriveShlExt.h"
 #include "PropertyHelper.h"
+#include "ShellFolderViewCBHandler.h"
 
 HRESULT WINAPI CGDriveShlExt::UpdateRegistry(_In_ BOOL bRegister) throw()
 {
@@ -1281,32 +1281,22 @@ STDMETHODIMP CGDriveShlExt::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCU
 {
   try
   {
-    Log::WriteOutput(LogType::Debug, L"IShellFolder::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY rgpidl, __inout SFGAOF *rgfInOut)", cidl);
-    HRESULT hr = E_INVALIDARG;
+    Log::WriteOutput(LogType::Test, L"IShellFolder::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY rgpidl, __inout SFGAOF *rgfInOut)");
+    HRESULT hr = S_OK;
+    
+    CHECK_ARG(rgpidl != nullptr);
+    CHECK_ARG(rgfInOut != nullptr);
 
-    if (cidl && rgpidl)
+    ULONG rgfOut = *rgfInOut;
+
+    for (UINT i = 0; i < cidl; i++)
     {
-      hr = S_OK;
-
-      ULONG rgfOut = *rgfInOut;
-
-      for (UINT i = 0; i < cidl; i++)
-      {
-        DWORD rgfItem;
-
-        hr = _GetAttributesOf(rgpidl[i], *rgfInOut, &rgfItem);
-
-        if (!SUCCEEDED(hr))
-          break;
-
-        rgfOut &= rgfItem;
-      }
-
-      if (SUCCEEDED(hr))
-      {
-        *rgfInOut = rgfOut;
-      }
+      DWORD rgfItem;
+      CHECK_HR(_GetAttributesOf(rgpidl[i], *rgfInOut, &rgfItem));
+      rgfOut &= rgfItem;
     }
+
+    *rgfInOut = rgfOut;
 
     return hr;
   }

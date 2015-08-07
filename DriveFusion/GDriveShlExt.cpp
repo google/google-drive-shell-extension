@@ -1285,7 +1285,7 @@ STDMETHODIMP CGDriveShlExt::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCU
 {
   try
   {
-    Log::WriteOutput(LogType::Test, L"IShellFolder::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY rgpidl, __inout SFGAOF *rgfInOut)");
+    Log::WriteOutput(LogType::Debug, L"IShellFolder::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY rgpidl, __inout SFGAOF *rgfInOut)");
     HRESULT hr = S_OK;
     
     CHECK_ARG(rgpidl != nullptr);
@@ -1331,6 +1331,8 @@ HRESULT CGDriveShlExt::_GetAttributesOf(PCUITEMID_CHILD pidl, DWORD rgfIn, __out
             E_FAIL);
         CHECK_HR(_CreateItemID(child, &_newFilePidl));
         
+        CHECK_TRUE(child->CreatePathTo(), E_FAIL);
+
         CIdList pidlPath;
         CHECK_HR(CIdList::Combine(_spidl, _newFilePidl, pidlPath));
         _didUpdate = true;

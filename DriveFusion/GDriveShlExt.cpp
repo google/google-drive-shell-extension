@@ -533,7 +533,6 @@ HRESULT CGDriveShlExt::_GetDataFromID(const std::wstring& id, bool updateCache, 
   HRESULT hr = S_OK;
 
   (*fileInfo) = _fileManager.GetFile(id, updateCache, getChildren, _ignoreGetFilesError);
-
   if ((*fileInfo) == NULL)
   {
     if (_fileManager.HasError())
@@ -544,7 +543,7 @@ HRESULT CGDriveShlExt::_GetDataFromID(const std::wstring& id, bool updateCache, 
     {
       Log::WriteOutput(LogType::Error, L"Could not find file with specified id=%s", id.c_str());
     }
-    hr = E_INVALIDARG;
+    CHECK_HR(HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
   }
 
   return hr;

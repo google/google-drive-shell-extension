@@ -1370,7 +1370,7 @@ HRESULT CGDriveShlExt::_GetAttributesOf(PCUITEMID_CHILD pidl, DWORD rgfIn, __out
               Log::Error(L"CGDriveShlExt::_GetAttributesOf failed to create directory for placeholder file");
             }
 
-            if (fileInfo->Description == L"Created by Google Drive Shell Extension" &&
+            if (fileInfo->Description == L"Created by Google Drive Proxy." &&
               fileInfo->CreatedDate >= fileInfo->ModifiedDate)
             {
               // this was a file we inserted, and DO NOT want a temp file for, so the application will not prompt to overwrite

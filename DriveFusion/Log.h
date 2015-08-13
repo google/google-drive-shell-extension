@@ -26,8 +26,8 @@ struct LogType
     Information = 1<<1,
     Warning = 1<<2,
     Error = 1<<3,
-    Performance = 1<<4,
     Debug = 1<<4,
+    Test = 1<<5,
     All = Information | Warning | Error | Debug,
   };
 };

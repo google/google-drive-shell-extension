@@ -57,17 +57,6 @@ namespace
     }
   }
 
-  void CreatePath(const std::wstring& path, size_t last = std::wstring::npos)
-  {
-    const auto parentPos = path.find_last_of( L"\\", last );
-    const auto err = CreateDirectory( path.substr(0,parentPos).c_str(), NULL );
-    if ( err == 0 && GetLastError() == ERROR_PATH_NOT_FOUND )
-    {
-      CreatePath( path, parentPos-1 );
-      CreateDirectory( path.substr(0,parentPos).c_str(), NULL );
-    }
-  }
-
   LogType::eType GetLogLevel()
   {
     DWORD logLevel = fallbackLogLevel;
@@ -178,7 +167,7 @@ void Log::WriteOutput(LogType::eType logType, const wchar_t* szFormat, ...)
     static Scoped_Mutex mutex;
     Scoped_Lock lock(&mutex);
 
-    CreatePath(_logFile);
+    PathInfo::CreatePath(_logFile);
     std::wofstream myfile(_logFile, std::ofstream::app);
     myfile.write(output.c_str(), output.length());
   }

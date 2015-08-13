@@ -160,8 +160,8 @@ FileInfo* FileManager::GetFile(std::wstring id, bool updateCache, bool getChildr
   // public function should all be locked
   Scoped_Lock serviceLock(&_mutex);
 
-  if (GetLog() == NULL)
-    return NULL;
+  if (GetLog() == nullptr)
+    return nullptr;
 
   if (IsRootId(id) && RootId.length() > 0)
   {

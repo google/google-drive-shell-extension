@@ -64,21 +64,14 @@ void CDriveItemPropertyStore::FinalRelease()
 
 HRESULT CDriveItemPropertyStore::_Initialize(const PROPERTYKEY *rgKeys, UINT cKeys, GETPROPERTYSTOREFLAGS flags, CGDriveShlExt* gDriveShlExt, PCUITEMID_CHILD pidl)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"CDriveItemPropertyStore::_Initialize(const PROPERTYKEY *rgKeys, UINT cKeys, GETPROPERTYSTOREFLAGS flags, __in IShellFolder *psf, PCUITEMID_CHILD pidl)");
 
-  HRESULT hr = CIdList::CloneChild(pidl, _cpidl);
-
-  if (SUCCEEDED(hr))
-  {
-    _gDriveShlExt = gDriveShlExt;
-
-    hr = _InitializePropertyStore(rgKeys, cKeys, flags);
-
-    if (SUCCEEDED(hr))
-    {
-      _gDriveShlExt->AddRef();
-    }
-  }
+  CHECK_HR(CIdList::CloneChild(pidl, _cpidl));
+  
+  _gDriveShlExt = gDriveShlExt;
+  CHECK_HR(_InitializePropertyStore(rgKeys, cKeys, flags));
+  _gDriveShlExt->AddRef();
 
   return hr;
 }

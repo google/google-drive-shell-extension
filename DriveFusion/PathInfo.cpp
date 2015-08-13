@@ -92,3 +92,13 @@ std::wstring PathInfo::GetFileUrl(const std::wstring& path)
   return url;
 }
 
+void PathInfo::CreatePath(const std::wstring& path, size_t last)
+{
+  const auto parentPos = path.find_last_of(L"\\", last);
+  const auto err = CreateDirectory(path.substr(0,parentPos).c_str(), NULL);
+  if (err == 0 && GetLastError() == ERROR_PATH_NOT_FOUND)
+  {
+    CreatePath(path, parentPos-1);
+    CreateDirectory(path.substr(0,parentPos).c_str(), NULL);
+  }
+}

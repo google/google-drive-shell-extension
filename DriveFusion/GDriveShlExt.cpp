@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "stdafx.h"
-#include "GDriveShlExt.h"
-#include "ChildItemIDPolicy.h"
-#include "ShellFolderViewCBHandler.h"
 #include <ShellAPI.h>
+#include "ChildItemIDPolicy.h"
 #include "DriveItemDataObject.h"
-#include "DriveItemRelatedItem.h"
 #include "DriveItemPropertyStoreFactory.h"
 #include "DriveItemPropertyStore.h"
+#include "DriveItemRelatedItem.h"
 #include "DriveItemStream.h"
+#include "GDriveShlExt.h"
 #include "PropertyHelper.h"
+#include "ShellFolderViewCBHandler.h"
 
 HRESULT WINAPI CGDriveShlExt::UpdateRegistry(_In_ BOOL bRegister) throw()
 {
@@ -125,12 +125,17 @@ static const GUID SDefined_Unknown4 = // {42339A50-7A91-44F9-87AC-37E6EC1B1A88} 
 {0x42339A50, 0x7A91, 0x44F9, {0x87, 0xAC, 0x37, 0xE6, 0xEC, 0x1B, 0x1A, 0x88}};
 
 //
+const DriveItemSignature kNewFileSignature = { L"New File" };
+
 bool CGDriveShlExt::_didUpdate = false;
 DWORD CGDriveShlExt::_previousRGFIN = 0;
 CGDriveShlExt::HOSTINFO::TYPE CGDriveShlExt::_hostType = CGDriveShlExt::HOSTINFO::Unknown;
 UINT CGDriveShlExt::_lastViewUIMsg = 0;
 IDataObject* CGDriveShlExt::_contextMenuSelection = NULL;
 bool CGDriveShlExt::_ignoreGetFilesError = true;
+std::wstring CGDriveShlExt::_newFileName;
+DWORD CGDriveShlExt::_newFileAttributes = 0;
+CIdList CGDriveShlExt::_newFilePidl;
 
 #ifdef DEBUG
 // both are false, really don't want to debug service calls right now
@@ -533,7 +538,6 @@ HRESULT CGDriveShlExt::_GetDataFromID(const std::wstring& id, bool updateCache, 
   HRESULT hr = S_OK;
 
   (*fileInfo) = _fileManager.GetFile(id, updateCache, getChildren, _ignoreGetFilesError);
-
   if ((*fileInfo) == NULL)
   {
     if (_fileManager.HasError())
@@ -544,7 +548,7 @@ HRESULT CGDriveShlExt::_GetDataFromID(const std::wstring& id, bool updateCache, 
     {
       Log::WriteOutput(LogType::Error, L"Could not find file with specified id=%s", id.c_str());
     }
-    hr = E_INVALIDARG;
+    CHECK_HR(HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
   }
 
   return hr;
@@ -783,14 +787,11 @@ STDMETHODIMP CGDriveShlExt::GetCurFolder(__out PIDLIST_ABSOLUTE *ppidl)
   try
   {
     Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::GetCurFolder %s", _id.c_str());
-    CIdList clone = *ppidl;
-    HRESULT hr = CIdList::Clone(_spidl, clone);
-    *ppidl = clone.Release();
+    HRESULT hr = S_OK;
 
-    if (!SUCCEEDED(hr))
-    {
-      Log::WriteOutput(LogType::Error, L"CloneFullIDList returned hr=%d", hr);
-    }
+    CIdList clone;
+    CHECK_HR(CIdList::Clone(_spidl, clone));
+    *ppidl = clone.Release();
 
     return hr;
   }
@@ -1250,40 +1251,24 @@ HRESULT CGDriveShlExt::_CreateItemID(Fusion::GoogleDrive::FileInfo* fileInfo, CI
 {
   try
   {
-    Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_CreateItemID(Fusion::GoogleDrive::FileInfo* fileInfo, PITEMID_CHILD* ppidl)");
-    if (fileInfo->Id.length() > 200)
-    {
-      Log::WriteOutput(LogType::Error, L"CGDriveShlExt::_CreateItemID file ID is too long, this is extremely bad news, we'll have to make the buffer bigger");
-    }
-
     HRESULT hr = S_OK;
-    errno_t errnum;
+    Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_CreateItemID(Fusion::GoogleDrive::FileInfo* fileInfo, PITEMID_CHILD* ppidl)");
+    CHECK_TRUE(fileInfo->Id.length() <= 200,
+        // If we fail this check, we'll need to increase the size of the
+        // DriveItemSignature buffer.
+        E_FAIL);
 
     DriveItemSignature pri;
-    errnum = wcscpy_s(pri.Id, fileInfo->Id.c_str());
+    CHECK_TRUE(wcscpy_s(pri.Id, fileInfo->Id.c_str()) == 0,
+        E_FAIL);
 
-    if (errnum != 0)
     {
-      hr = E_FAIL;
-    }
-
-    if (!SUCCEEDED(hr))
-    {
-      Log::WriteOutput(LogType::Error, L"wcscpy_s returned hr=%d", errnum);
-    }
-    else
-    {
-      {
-        LPITEMIDLIST tmpPidl;
-        // We used to create an IPropertyStore, but we were not using it for anything, and also have problems with comparing the same ID which had different property stores.
-        hr = CreateItemID(&pri, NULL, &tmpPidl);
-        ppidl->Reset(tmpPidl);
-      }
-
-      if (!SUCCEEDED(hr))
-      {
-        Log::WriteOutput(LogType::Error, L"CreateItemID returned hr=%d", hr);
-      }
+      LPITEMIDLIST tmpPidl;
+      // We used to create an IPropertyStore, but we were not using it for
+      // anything, and also have problems with comparing the same ID which had
+      // different property stores.
+      CHECK_HR(CreateItemID(&pri, nullptr, &tmpPidl));
+      ppidl->Reset(tmpPidl);
     }
 
     return hr;
@@ -1300,32 +1285,22 @@ STDMETHODIMP CGDriveShlExt::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCU
 {
   try
   {
-    Log::WriteOutput(LogType::Debug, L"IShellFolder::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY rgpidl, __inout SFGAOF *rgfInOut)", cidl);
-    HRESULT hr = E_INVALIDARG;
+    Log::WriteOutput(LogType::Debug, L"IShellFolder::GetAttributesOf(UINT cidl, __in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY rgpidl, __inout SFGAOF *rgfInOut)");
+    HRESULT hr = S_OK;
+    
+    CHECK_ARG(rgpidl != nullptr);
+    CHECK_ARG(rgfInOut != nullptr);
 
-    if (cidl && rgpidl)
+    ULONG rgfOut = *rgfInOut;
+
+    for (UINT i = 0; i < cidl; i++)
     {
-      hr = S_OK;
-
-      ULONG rgfOut = *rgfInOut;
-
-      for (UINT i = 0; i < cidl; i++)
-      {
-        DWORD rgfItem;
-
-        hr = _GetAttributesOf(rgpidl[i], *rgfInOut, &rgfItem);
-
-        if (!SUCCEEDED(hr))
-          break;
-
-        rgfOut &= rgfItem;
-      }
-
-      if (SUCCEEDED(hr))
-      {
-        *rgfInOut = rgfOut;
-      }
+      DWORD rgfItem;
+      CHECK_HR(_GetAttributesOf(rgpidl[i], *rgfInOut, &rgfItem));
+      rgfOut &= rgfItem;
     }
+
+    *rgfInOut = rgfOut;
 
     return hr;
   }
@@ -1341,84 +1316,102 @@ HRESULT CGDriveShlExt::_GetAttributesOf(PCUITEMID_CHILD pidl, DWORD rgfIn, __out
 {
   try
   {
-    FileInfo* fileInfo = NULL;
+    HRESULT hr = S_OK;
 
-    HRESULT hr = _GetDataFromIDList(pidl, false, false, &fileInfo);
+    CHECK_ARG(pidl != nullptr);
+    CHECK_ARG(prgfOut != nullptr);
 
-    if (SUCCEEDED(hr))
+    if (ChildIdFromPidl(pidl) == kNewFileSignature.Id)
     {
-      Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_GetAttributesOf %s, flags=%0x", fileInfo->Id.c_str(), rgfIn);
-
-      // The shell expects the file to already exist
-      // It doesn't since that's the general idea of this project.
-      // I'm resorting to looking for a series of checks that I have observed
-
-      if (fileInfo->IsFile())
+      if (_newFilePidl == nullptr)
       {
-        if (CGDriveShlExt::_previousRGFIN == 0x30c10000 && rgfIn == 0x40000000)  // select item via dbl click in open dialog or save dialog
+        FileInfo* child = nullptr;
+        bool isFolder = (_newFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        CHECK_TRUE(_fileManager.InsertFile(_id, _newFileName, isFolder, &child),
+            E_FAIL);
+        CHECK_HR(_CreateItemID(child, &_newFilePidl));
+        
+        CHECK_TRUE(child->CreatePathTo(), E_FAIL);
+
+        CIdList pidlPath;
+        CHECK_HR(CIdList::Combine(_spidl, _newFilePidl, pidlPath));
+        _didUpdate = true;
+
+        LONG eventId = isFolder? SHCNE_MKDIR : SHCNE_CREATE;
+        SHChangeNotify(eventId, SHCNF_IDLIST | SHCNF_FLUSH, pidlPath, pidlPath);
+        SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSH, _spidl, NULL);
+      }
+      pidl = _newFilePidl;
+    }
+
+    FileInfo* fileInfo = nullptr;
+    CHECK_HR(_GetDataFromIDList(pidl, false, false, &fileInfo));
+    Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_GetAttributesOf %s, flags=%0x", fileInfo->Id.c_str(), rgfIn);
+
+    // The shell expects the file to already exist
+    // It doesn't since that's the general idea of this project.
+    // I'm resorting to looking for a series of checks that I have observed
+
+    if (fileInfo->IsFile())
+    {
+      if (CGDriveShlExt::_previousRGFIN == 0x30c10000 && rgfIn == 0x40000000)  // select item via dbl click in open dialog or save dialog
+      {
+        Log::WriteOutput(LogType::Warning, L"_previousRGFIN=%0x, rgfIn=%0x", CGDriveShlExt::_previousRGFIN, rgfIn);
+
+        if (_hostType == HOSTINFO::SaveAs)
         {
-          Log::WriteOutput(LogType::Warning, L"_previousRGFIN=%0x, rgfIn=%0x", CGDriveShlExt::_previousRGFIN, rgfIn);
-
-          if (_hostType == HOSTINFO::SaveAs)
+          // When the user navigates to save a file
+          // but the file doesn't actually exist on disk
+          // We need to create a target file so the user doesn't get a can not locate file error.
+          if (!PathInfo::FileExists(fileInfo->FilePath()))
           {
-            // When the user navigates to save a file
-            // but the file doesn't actually exist on disk
-            // We need to create a target file so the user doesn't get a can not locate file error.
-            if (!PathInfo::FileExists(fileInfo->FilePath()))
+            if(!fileInfo->CreatePathTo())
             {
-              if(!fileInfo->CreatePathTo())
-              {
-                Log::Error(L"CGDriveShlExt::_GetAttributesOf failed to create directory for placeholder file");
-              }
+              Log::Error(L"CGDriveShlExt::_GetAttributesOf failed to create directory for placeholder file");
+            }
 
-              if (fileInfo->Description == L"Created by Google Drive Shell Extension" &&
-                fileInfo->CreatedDate >= fileInfo->ModifiedDate)
+            if (fileInfo->Description == L"Created by Google Drive Proxy." &&
+              fileInfo->CreatedDate >= fileInfo->ModifiedDate)
+            {
+              // this was a file we inserted, and DO NOT want a temp file for, so the application will not prompt to overwrite
+            }
+            else
+            {
+              HANDLE hFile = CreateFile(fileInfo->FilePath().c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+
+              if (hFile == INVALID_HANDLE_VALUE)
               {
-                // this was a file we inserted, and DO NOT want a temp file for, so the application will not prompt to overwrite
+                Log::Error(L"CGDriveShlExt::_GetAttributesOf failed when attempting to create a placeholder file");
               }
               else
               {
-                HANDLE hFile = CreateFile(fileInfo->FilePath().c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-
-                if (hFile == INVALID_HANDLE_VALUE)
-                {
-                  Log::Error(L"CGDriveShlExt::_GetAttributesOf failed when attempting to create a placeholder file");
-                }
-                else
-                {
-                  CloseHandle(hFile);
-                }
+                CloseHandle(hFile);
               }
             }
           }
-          else
-          {
-            hr = DoDownload(fileInfo);
-          }
-
-          CGDriveShlExt::_previousRGFIN = 0;
-        }
-        else if (rgfIn == 0x30c10000)
-        {
-          CGDriveShlExt::_previousRGFIN = rgfIn;
         }
         else
         {
-          CGDriveShlExt::_previousRGFIN = 0;
+          hr = DoDownload(fileInfo);
         }
-      }
 
-      if (SUCCEEDED(hr))
+        CGDriveShlExt::_previousRGFIN = 0;
+      }
+      else if (rgfIn == 0x30c10000)
       {
-        DWORD dwMask = 0;
-
-        hr = _GetAttributesOf(fileInfo, &dwMask);
-
-        if (SUCCEEDED(hr))
-        {
-          *prgfOut = rgfIn & dwMask;
-        }
+        CGDriveShlExt::_previousRGFIN = rgfIn;
       }
+      else
+      {
+        CGDriveShlExt::_previousRGFIN = 0;
+      }
+    }
+
+    if (SUCCEEDED(hr))
+    {
+      DWORD dwMask = 0;
+      CHECK_HR(_GetAttributesOf(fileInfo, &dwMask));
+      *prgfOut = rgfIn & dwMask;
     }
 
     return hr;
@@ -1505,13 +1498,24 @@ STDMETHODIMP CGDriveShlExt::BindToObject(PCUIDLIST_RELATIVE pidl, __in IBindCtx 
 {
   try
   {
+    HRESULT hr = S_OK;
+
+    CHECK_ARG(pidl != nullptr);
+    CHECK_ARG(ppv != nullptr);
+
     Log::WriteOutput(LogType::Debug, L"IShellFolder::BindToObject");
+
+    if (ChildIdFromPidl(pidl) == kNewFileSignature.Id)
+    {
+      pidl = _newFilePidl;
+    }
+
     *ppv = NULL;
-    HRESULT hr = E_NOINTERFACE;
+    hr = E_NOINTERFACE;
 
     if (riid == IID_IShellFolder || riid == IID_IShellFolder2)
     {
-      hr = _BindToSubfolder(pidl, riid, ppv);
+      CHECK_HR(_BindToSubfolder(pidl, riid, ppv));
     }
     else if (ILIsChild(pidl))
     {
@@ -1528,15 +1532,10 @@ STDMETHODIMP CGDriveShlExt::BindToObject(PCUIDLIST_RELATIVE pidl, __in IBindCtx 
 
         CDriveItem driveItem;
 
-        hr = _GetDataFromIDList(pidl, false, false, driveItem);
-
-        if (SUCCEEDED(hr))
-        {
-          BIND_OPTS options;
-          hr = _GetContextOptions(pbc, options);
-          if (SUCCEEDED(hr))
-            hr = CDriveItemStream::CreateInstanceReturnInterfaceTo(driveItem, options, riid, ppv);
-        }
+        CHECK_HR(_GetDataFromIDList(pidl, false, false, driveItem));
+        BIND_OPTS options;
+        CHECK_HR(_GetContextOptions(pbc, options));
+        CHECK_HR(CDriveItemStream::CreateInstanceReturnInterfaceTo(driveItem, options, riid, ppv));
       }
       else if (riid == IID_IIdentityName || riid == IID_ITransferMediumItem || riid == IID_IViewStateIdentityItem || riid == IID_IDisplayItem)
       {
@@ -1559,21 +1558,16 @@ STDMETHODIMP CGDriveShlExt::BindToObject(PCUIDLIST_RELATIVE pidl, __in IBindCtx 
 
         CComObject<CGDriveShlExt>* drive;
 
-        hr = CGDriveShlExt::CreateInstance(_spidl, pidl, &drive);
-
-        if (SUCCEEDED(hr))
-        {
-          drive->AddRef();
-          hr = CDriveItemRelatedItem::CreateInstanceReturnInterfaceTo(drive, riid, ppv);
-
-          drive->Release();
-        }
+        CHECK_HR(CGDriveShlExt::CreateInstance(_spidl, pidl, &drive));
+        drive->AddRef();
+        hr = CDriveItemRelatedItem::CreateInstanceReturnInterfaceTo(drive, riid, ppv);
+        drive->Release();
       }
       else if (riid == IID_IPropertyStoreFactory)
       {
         Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::BindToObject IID_IPropertyStoreFactory::CDriveItemPropertyStoreFactory");
 
-        hr = CDriveItemPropertyStoreFactory::CreateInstanceReturnInterfaceTo(this, pidl, riid, ppv);
+        CHECK_HR(CDriveItemPropertyStoreFactory::CreateInstanceReturnInterfaceTo(this, pidl, riid, ppv));
       }
       else if (riid == SDefined_ILibraryDescription || riid == SDefined_Unknown1 || riid == SDefined_IItemSetOperations || riid == SDefined_IInterruptItem)
       {
@@ -1589,22 +1583,8 @@ STDMETHODIMP CGDriveShlExt::BindToObject(PCUIDLIST_RELATIVE pidl, __in IBindCtx 
       CComPtr<IShellFolder> ppsf;
       PCUITEMID_CHILD pidlChild;
 
-      hr = SHBindToFolderIDListParent(this, pidl, IID_PPV_ARGS(&ppsf), &pidlChild);
-
-      if (!SUCCEEDED(hr))
-      {
-        Log::WriteOutput(LogType::Error, L"SHBindToFolderIDListParent returned hr=%d", hr);
-      }
-      else
-      {
-        hr = ppsf->BindToObject(pidlChild, pbc, riid, ppv);
-
-        if (!SUCCEEDED(hr))
-        {
-          // This is not a serious error, and should be logged via the recursion call
-          Log::WriteOutput(LogType::Debug, L"CComPtr<IShellFolder>->BindToObject returned hr=%d", hr);
-        }
-      }
+      CHECK_HR(SHBindToFolderIDListParent(this, pidl, IID_PPV_ARGS(&ppsf), &pidlChild));
+      CHECK_HR(ppsf->BindToObject(pidlChild, pbc, riid, ppv));
     }
     return hr;
   }
@@ -1633,31 +1613,26 @@ STDMETHODIMP CGDriveShlExt::BindToStorage(PCUIDLIST_RELATIVE pidl, __in IBindCtx
 
 STDMETHODIMP CGDriveShlExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"IShellFolder::CompareIDs LPARAM:%X pidlLength (%d, %d) itemLength (%d, %d)", lParam, ILGetSize(pidl1), ILGetSize(pidl2), pidl1->mkid.cb, pidl2->mkid.cb);
+  
   int result = 0;
-
-  HRESULT hr = _CompareIDs(lParam, pidl1, pidl2, result);
-
-  if (SUCCEEDED(hr))
-  {
-    hr = MAKE_HRESULT(SEVERITY_SUCCESS, 0, (unsigned short)result);
-  }
+  CHECK_HR(_CompareIDs(lParam, pidl1, pidl2, result));
+  hr = MAKE_HRESULT(SEVERITY_SUCCESS, 0, (unsigned short)result);
 
   Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::CompareIDs resultCode (%08X)", hr);
-
   return hr;
 }
 
 HRESULT CGDriveShlExt::_CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, int& result)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, int& result)");
 
-  HRESULT hr = S_OK;
   result = 0;
+  CHECK_HR(_CompareForEmptyIDs(pidl1, pidl2, result));
 
-  hr = _CompareForEmptyIDs(pidl1, pidl2, result);
-
-  if (SUCCEEDED(hr) && result == 0)
+  if (result == 0)
   {
     std::wstring id1 = ChildIdFromPidl(pidl1);
     std::wstring id2 = ChildIdFromPidl(pidl2);
@@ -1673,17 +1648,8 @@ HRESULT CGDriveShlExt::_CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUI
       // Do a recursive comparison
       CComPtr<IShellFolder2> spsf2;
 
-      hr = BindToObject(pidl1, NULL, IID_PPV_ARGS(&spsf2));
-      if (!SUCCEEDED(hr))
-      {
-        return hr;
-      }
-
-      hr = spsf2->CompareIDs(lParam, ILNext(pidl1), ILNext(pidl2));
-      if (!SUCCEEDED(hr))
-      {
-        return hr;
-      }
+      CHECK_HR(BindToObject(pidl1, NULL, IID_PPV_ARGS(&spsf2)));
+      CHECK_HR(spsf2->CompareIDs(lParam, ILNext(pidl1), ILNext(pidl2)));
 
       if ((short)(hr & 0xffff) < 0)
       {
@@ -1700,21 +1666,11 @@ HRESULT CGDriveShlExt::_CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUI
       CDriveItem driveItem1;
       CDriveItem driveItem2;
 
-      hr = _GetDataFromID(id1, false, false, driveItem1);
-      if (!SUCCEEDED(hr))
-      {
-        return hr;
-      }
-
-      hr = _GetDataFromID(id2, false, false, driveItem2);
-      if (!SUCCEEDED(hr))
-      {
-        return hr;
-      }
-      hr = _CompareDriveItem(lParam, driveItem1, driveItem2, result); // comparing left most item
+      CHECK_HR(_GetDataFromID(id1, false, false, driveItem1));
+      CHECK_HR(_GetDataFromID(id2, false, false, driveItem2));
+      CHECK_HR(_CompareDriveItem(lParam, driveItem1, driveItem2, result)); // comparing left most item
     }
   }
-
 
   return hr;
 }
@@ -1830,21 +1786,13 @@ STDMETHODIMP CGDriveShlExt::GetDetailsEx(PCUITEMID_CHILD pidl, const PROPERTYKEY
 {
   try
   {
+    HRESULT hr = S_OK;
     Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::GetDetailsEx(PCUITEMID_CHILD pidl, const PROPERTYKEY *pkey=%d, __out VARIANT *pvar)", pkey->pid);
 
     CPropVariant spropvar;
 
-    HRESULT hr = PropertyHelper::GetProperty(this, pidl, *pkey, &spropvar);
-
-    if (SUCCEEDED(hr))
-    {
-      hr = PropVariantToVariant(&spropvar, pvar);
-
-      if (!SUCCEEDED(hr))
-      {
-        Log::WriteOutput(LogType::Error, L"PropVariantToVariant returned hr=%d", hr);
-      }
-    }
+    CHECK_HR(PropertyHelper::GetProperty(this, pidl, *pkey, &spropvar));
+    CHECK_HR(PropVariantToVariant(&spropvar, pvar));
 
     return hr;
   }
@@ -2392,6 +2340,11 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
     CHECK_ARG(pszDisplayName != nullptr);
     CHECK_ARG(ppidl != nullptr);
 
+    if (pdwAttributes != nullptr)
+    {
+      Log::WriteOutput(LogType::Warning, L"Attributes= %d", *pdwAttributes);
+    }
+
     SetDialogType(hwnd);
 
     // pdwAttrbiute is a set of SFGAOF flags, it's optional to filter by these
@@ -2402,6 +2355,7 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
 
     BIND_OPTS options;
     CHECK_HR(_GetContextOptions(pbc, options));
+    Log::WriteOutput(LogType::Warning, L"Options flags= %d, mode = %d", options.grfFlags, options.grfMode);
 
     if (SUCCEEDED(
         _NextNameSegment(pathFollowingChild, nameOfChild, &ppidlOfChild, pdwAttributes)))
@@ -2415,7 +2369,7 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
         CHECK_TRUE((options.grfFlags & BIND_JUSTTESTEXISTENCE) == 0,
             HRESULT_FROM_WIN32(ERROR_FILE_EXISTS));
         
-        CIdList outPidl = *ppidl;
+        CIdList outPidl;
         CHECK_HR(CIdList::Clone(ppidlOfChild, outPidl));
         *ppidl = outPidl.Release();
       }
@@ -2435,7 +2389,7 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
           spidlNext.Reset(tmpNext);
         }
 
-        CIdList outPidl = *ppidl;
+        CIdList outPidl;
         CHECK_HR(CIdList::Combine(ppidlOfChild, spidlNext, outPidl));
         *ppidl = outPidl.Release();
       }
@@ -2450,28 +2404,10 @@ STDMETHODIMP CGDriveShlExt::ParseDisplayName(HWND hwnd, __in IBindCtx *pbc, __in
           // Service cannot create root file
           E_FAIL);
     
-      FileInfo* child = NULL;
-      bool isFolder = pdwAttributes != NULL && ((*pdwAttributes) & FILE_ATTRIBUTE_DIRECTORY) > 0;
-      CHECK_TRUE(_fileManager.InsertFile(_id, nameOfChild, isFolder, &child),
-          E_FAIL);
-      CHECK_HR(_CreateItemID(child, &ppidlOfChild));
-            
-      {
-        CIdList outPidl = *ppidl;
-        CHECK_HR(CIdList::Clone(ppidlOfChild, outPidl));
-        *ppidl = outPidl.Release();
-      }
-
-      CHECK_TRUE(child->CreatePathTo(), E_FAIL);
-      FileInfo::Release(&child);
-
-      CIdList pidlPath;
-      CHECK_HR(CIdList::Combine(_spidl, *ppidl, pidlPath));
-      _didUpdate = true;
-
-      LONG eventId = isFolder? SHCNE_MKDIR : SHCNE_CREATE;
-      SHChangeNotify(eventId, SHCNF_IDLIST | SHCNF_FLUSH, pidlPath, pidlPath);
-      SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSH, _spidl, NULL);
+      _newFileName = nameOfChild;
+      _newFileAttributes = pdwAttributes != nullptr? *pdwAttributes : 0;
+      CHECK_HR(CreateItemID(&kNewFileSignature, nullptr, ppidl));
+      _newFilePidl.Reset();
     }
 
     if (pchEaten != NULL)
@@ -2641,6 +2577,7 @@ STDMETHODIMP CGDriveShlExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags
 {
   try
   {
+    HRESULT hr = S_OK;
     Log::WriteOutput(LogType::Debug, L"IShellFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags, __out STRRET *psrName)");
 
     static const BYTE _indices[] =
@@ -2686,12 +2623,13 @@ STDMETHODIMP CGDriveShlExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags
       index |= DISPLAYNAMEOFINFO::GDNM_FOREDITING;
     }
 
-    HRESULT hr = (this->*_DisplayNameOfInfo[_indices[index]]._GetDisplayNameOf)(pidl, uFlags, &psrName->pOleStr);
-
-    if (SUCCEEDED(hr))
+    if (ChildIdFromPidl(pidl) == kNewFileSignature.Id)
     {
-      psrName->uType = STRRET_WSTR;
+      pidl = _newFilePidl;
     }
+
+    CHECK_HR((this->*_DisplayNameOfInfo[_indices[index]]._GetDisplayNameOf)(pidl, uFlags, &psrName->pOleStr));
+    psrName->uType = STRRET_WSTR;
 
     return hr;
   }
@@ -2747,72 +2685,53 @@ void _LogName(PCWCHAR title, PCWCHAR returnedName, bool isError, SHGDNF uFlags)
 
 HRESULT CGDriveShlExt::_GetDisplayNameOfDisplayName(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszName)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_GetDisplayNameOfDisplayName(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszName)");
 
   CDriveItem driveItem;
 
-  HRESULT hr = _GetDataFromIDList(pidl, false, false, driveItem);
-
-  if (SUCCEEDED(hr))
-  {
-    hr = _CopyWStringToPWSTR(driveItem.ItemName(), ppszName);
-
-    _LogName(driveItem.ItemName().c_str(), *ppszName, !SUCCEEDED(hr), uFlags);
-  }
+  CHECK_HR(_GetDataFromIDList(pidl, false, false, driveItem));
+  CHECK_HR(_CopyWStringToPWSTR(driveItem.ItemName(), ppszName));
+  _LogName(driveItem.ItemName().c_str(), *ppszName, !SUCCEEDED(hr), uFlags);
 
   return hr;
 }
 
 HRESULT CGDriveShlExt::_GetDisplayNameOfDisplayPath(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszPath)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_GetDisplayNameOfDisplayPath(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszPath)");
 
   CDriveItem driveItem;
+  CHECK_HR(_GetDataFromIDList(pidl, false, false, driveItem));
 
-  HRESULT hr = _GetDataFromIDList(pidl, false, false, driveItem);
-
-  if (SUCCEEDED(hr))
-  {
-    std::wstring rootName;
-
-    hr = _GetNameFromIDList(_spidl, SIGDN_DESKTOPABSOLUTEEDITING, rootName);
-
-    if (SUCCEEDED(hr))
-    {
-      hr = _CopyWStringToPWSTR(driveItem.ItemFolderPathDisplay(rootName, true), ppszPath);
-      if (SUCCEEDED(hr))
-        _LogName(driveItem.ItemName().c_str(), *ppszPath, !SUCCEEDED(hr), uFlags);
-    }
-  }
+  std::wstring rootName;
+  CHECK_HR(_GetNameFromIDList(_spidl, SIGDN_DESKTOPABSOLUTEEDITING, rootName));
+  CHECK_HR(_CopyWStringToPWSTR(driveItem.ItemFolderPathDisplay(rootName, true), ppszPath));
+  _LogName(driveItem.ItemName().c_str(), *ppszPath, !SUCCEEDED(hr), uFlags);
 
   return hr;
 }
 
 HRESULT CGDriveShlExt::_GetDisplayNameOfParsingName(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszName)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_GetDisplayNameOfParsingName(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszName)");
 
   CDriveItem driveItem;
-
-  HRESULT hr = _GetDataFromIDList(pidl, false, false, driveItem);
-
-  if (SUCCEEDED(hr))
-  {
-    hr = _CopyWStringToPWSTR(driveItem.ItemName(), ppszName);
-
-    _LogName(driveItem.ItemName().c_str(), *ppszName, !SUCCEEDED(hr), uFlags);
-  }
+  CHECK_HR(_GetDataFromIDList(pidl, false, false, driveItem));
+  CHECK_HR(_CopyWStringToPWSTR(driveItem.ItemName(), ppszName));
+  _LogName(driveItem.ItemName().c_str(), *ppszName, !SUCCEEDED(hr), uFlags);
 
   return hr;
 }
 
 HRESULT CGDriveShlExt::_GetDisplayNameOfParsingPath(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszPath)
 {
+  HRESULT hr = S_OK;
   Log::WriteOutput(LogType::Debug, L"CGDriveShlExt::_GetDisplayNameOfParsingPath(PCUITEMID_CHILD pidl, SHGDNF uFlags, __deref_out PWSTR *ppszPath)");
 
   std::wstring id = ChildIdFromPidl(pidl);
-  HRESULT hr = E_FAIL;
-
   if (_fileManager.IsRootId(id))
   {
     // a bit of a hack, if its the root, we pull the location from the FileManger's log properties
@@ -2823,25 +2742,17 @@ HRESULT CGDriveShlExt::_GetDisplayNameOfParsingPath(PCUITEMID_CHILD pidl, SHGDNF
     else
     {
       hr = _CopyWStringToPWSTR(L"C:\\", ppszPath);
-
     }
-
     _LogName(_fileManager.RootId.c_str(), *ppszPath, !SUCCEEDED(hr), uFlags);
   }
   else
   {
     CDriveItem driveItem;
 
-    hr = _GetDataFromID(id, false, false, driveItem);
-
-    if (SUCCEEDED(hr))
-    {
-      std::wstring rootName;
-
-      hr = _CopyWStringToPWSTR(driveItem.ItemPathDisplay(), ppszPath);
-
-      _LogName(driveItem.ItemName().c_str(), *ppszPath, !SUCCEEDED(hr), uFlags);
-    }
+    CHECK_HR(_GetDataFromID(id, false, false, driveItem));
+    std::wstring rootName;
+    CHECK_HR(_CopyWStringToPWSTR(driveItem.ItemPathDisplay(), ppszPath));
+    _LogName(driveItem.ItemName().c_str(), *ppszPath, !SUCCEEDED(hr), uFlags);
   }
 
   return hr;

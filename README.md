@@ -7,7 +7,7 @@ transparently through Windows Explorer. This includes "File Open" and "Browse"
 commands from within other Windows applications, etc. It connects to Google
 Drive using the Google Drive Proxy service.
 
-The main feature of the project is that syncronization is performed only as
+The main feature of the project is that synchronization is performed only as
 needed. Instead of holding the entire contents of your Google Drive folder on
 disk, it only keeps what it needs. When you open or copy files it will download
 them. It will then upload any changes you make locally to keep the folders in

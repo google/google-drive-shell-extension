@@ -92,5 +92,4 @@ and drop into and out of it, etc.
 
 # Contact
 
-For questions and answers join/view the [google-drive-shell-extension]
-(https://groups.google.com/d/forum/google-drive-shell-extension) Google Group.
+For questions and answers join/view the [google-drive-shell-extension](https://groups.google.com/d/forum/google-drive-shell-extension) Google Group.

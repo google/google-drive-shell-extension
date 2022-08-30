@@ -1,5 +1,5 @@
 # Important Notice Of Archive
-This project is no longer being maintained and therefor being moved to the archive.
+This project is no longer being maintained and therefore being moved to the archive.
 
 # About Google Drive Shell Extension
 

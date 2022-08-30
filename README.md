@@ -1,3 +1,6 @@
+# Important Notice Of Archive
+This project is no longer being maintained and therefor being moved to the archive.
+
 # About Google Drive Shell Extension
 
 Google Drive Shell Extension is a Shell Namespace Extension for Microsoft
